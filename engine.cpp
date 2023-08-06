@@ -5,7 +5,7 @@ bool Hooks::IsConnected( ) {
 
 	static Address IsLoadoutAllowed{ pattern::find( g_csgo.m_client_dll, XOR( "84 C0 75 04 B0 01 5F" ) ) };
 
-	if( g_menu.main.misc.unlock.get( ) && stack.ReturnAddress( ) == IsLoadoutAllowed )
+	if( stack.ReturnAddress( ) == IsLoadoutAllowed )
 		return false;
 
 	return g_hooks.m_engine.GetOldMethod< IsConnected_t >( IVEngineClient::ISCONNECTED )( this );

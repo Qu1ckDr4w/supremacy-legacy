@@ -88,31 +88,6 @@ void Force_proxy( CRecvProxyData *data, Address ptr, Address out ) {
 	// get ragdoll owner.
 	Player *player = ragdoll->GetPlayer( );
 
-	// we only want this happening to noobs we kill.
-	if ( g_menu.main.misc.ragdoll_force.get( ) && g_cl.m_local && player && player->enemy( g_cl.m_local ) ) {
-		// get m_vecForce.
-		vec3_t vel = { data->m_Value.m_Vector[ 0 ], data->m_Value.m_Vector[ 1 ], data->m_Value.m_Vector[ 2 ] };
-
-		// give some speed to all directions.
-		vel *= 1000.f;
-
-		// boost z up a bit.
-		if ( vel.z <= 1.f )
-			vel.z = 2.f;
-
-		vel.z *= 2.f;
-
-		// don't want crazy values for this... probably unlikely though?
-		math::clamp( vel.x, std::numeric_limits< float >::lowest( ), std::numeric_limits< float >::max( ) );
-		math::clamp( vel.y, std::numeric_limits< float >::lowest( ), std::numeric_limits< float >::max( ) );
-		math::clamp( vel.z, std::numeric_limits< float >::lowest( ), std::numeric_limits< float >::max( ) );
-
-		// set new velocity.
-		data->m_Value.m_Vector[ 0 ] = vel.x;
-		data->m_Value.m_Vector[ 1 ] = vel.y;
-		data->m_Value.m_Vector[ 2 ] = vel.z;
-	}
-
 	if ( g_hooks.m_Force_original )
 		g_hooks.m_Force_original( data, ptr, out );
 }
@@ -188,8 +163,6 @@ void Hooks::init( ) {
 	g_custom_entity_listener.init( );
 
 	// cvar hooks.
-	m_debug_spread.init( g_csgo.net_showfragments );
-	m_debug_spread.add( ConVar::GETINT, util::force_cast( &Hooks::DebugSpreadGetInt ) );
 
 	m_net_show_fragments.init( g_csgo.net_showfragments );
 	m_net_show_fragments.add( ConVar::GETBOOL, util::force_cast( &Hooks::NetShowFragmentsGetBool ) );

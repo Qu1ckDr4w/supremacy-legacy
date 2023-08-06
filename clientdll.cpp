@@ -87,6 +87,7 @@ void Hooks::FrameStageNotify( Stage_t stage ) {
 		// restore non-compressed netvars.
 		// g_netdata.apply( );
 
+		g_cl.Clantag();
 		g_skins.think( );
 	}
 

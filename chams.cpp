@@ -143,8 +143,8 @@ bool Chams::GenerateLerpedMatrix( int index, BoneArray* out ) {
 			vec3_t next = end ? ent->GetAbsOrigin( ) : ( it + 1 )->get( )->m_origin;
 			float  time_next = end ? ent->m_flSimulationTime( ) : ( it + 1 )->get( )->m_sim_time;
 
-			float total_latency = channel_info->GetAvgLatency( 0 ) + channel_info->GetAvgLatency( 1 );
-			std::clamp( total_latency, 0.f, max_unlag );
+			float total_latency = channel_info->GetAvgLatency(0) + channel_info->GetAvgLatency(1);
+			total_latency = std::clamp(total_latency, 0.0f, max_unlag);
 
 			float correct = total_latency + g_cl.m_lerp;
 			float time_delta = time_next - current_record->m_sim_time;

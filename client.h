@@ -30,6 +30,7 @@ public:
 	void EndMove( CUserCmd* cmd );
 	void BackupPlayers( bool restore );
 	void DoMove( );
+	void Clantag();
 	void DrawHUD( );
 	void UpdateInformation( );
 	void SetAngles( );
@@ -49,6 +50,12 @@ public:
 	void UpdateIncomingSequences( );
 
 public:
+	struct incoming_seq_t {
+		std::ptrdiff_t m_in_seq{}, m_in_rel_state{};
+	};
+
+	std::vector < incoming_seq_t > m_inc_seq{};
+
 	// local player variables.
 	Player*          m_local;
 	bool	         m_processing;

@@ -70,7 +70,7 @@ public:
 	void UpdateAnimations( LagRecord* record );
 	void OnNetUpdate( Player* player );
 	void OnRoundStart( Player* player );
-	void SetupHitboxes( LagRecord* record, bool history );
+	void SetupHitboxes( LagRecord* record );
 	bool SetupHitboxPoints( LagRecord* record, BoneArray* bones, int index, std::vector< vec3_t >& points );
 	bool GetBestAimPosition( vec3_t& aim, float& damage, LagRecord* record );
 
@@ -176,12 +176,11 @@ public:
 	bool CheckHitchance( Player* player, const ang_t& angle );
 	bool SelectTarget( LagRecord* record, const vec3_t& aim, float damage );
 	void apply( );
-	void NoSpread( );
 
 	// knifebot.
 	void knife( );
-	bool CanKnife( LagRecord* record, ang_t angle, bool& stab );
-	bool KnifeTrace( vec3_t dir, bool stab, CGameTrace* trace );
+	bool CanKnife(LagRecord* record, const ang_t& angle, bool& stab);
+	bool KnifeTrace(const vec3_t& dir, bool stab, CGameTrace* trace);
 	bool KnifeIsBehind( LagRecord* record );
 };
 

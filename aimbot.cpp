@@ -128,39 +128,7 @@ void AimPlayer::UpdateAnimations( LagRecord *record ) {
 		}
 	}
 
-	// // better fake angle detection.
-	// size_t consistency{};
-	// size_t size = std::min( 5u, m_records.size( ) );
-	// 
-	// for( size_t i{}; i < size; i++ ) {
-	//     // if we have lag on this record.
-	//     if( m_records[ i ].get( )->m_lag > 1 )
-	//         ++consistency;
-	// }
-	// 
-	// // compute lag consistency scale.
-	// float scale = ( float )consistency / ( float )size;
-	// 
-	// // if faking angles more than 80% of the time
-	// // and not bot, player uses fake angles.
-	// bool fake = g_menu.main.aimbot.correct.get( ) && !bot && scale > 0.8f;
-
-	// size_t consistency{ 0u };
-	// size_t size{ m_records.size( ) };
-	// 
-	// // add up records the player didn't lag.
-	// for( size_t i{ 0u }; i < size; i++ ) {
-	//     if( m_records[ i ].get( )->m_lag < 1 )
-	//         ++consistency;
-	// }
-	// 
-	// // compute lag consistency scale.
-	// float scale = ( float )consistency / size;
-	// 
-	// // lagged too much.
-	// bool fake = !bot && scale < 0.5f;
-
-	bool fake = !bot && g_menu.main.aimbot.correct.get( );
+	bool fake = !bot && g_menu.main.aimbot.enable.get( );
 
 	// if using fake angles, correct angles.
 	if ( fake )
@@ -318,7 +286,7 @@ void AimPlayer::OnRoundStart( Player *player ) {
 	// IMPORTANT: DO NOT CLEAR LAST HIT SHIT.
 }
 
-void AimPlayer::SetupHitboxes( LagRecord *record, bool history ) {
+void AimPlayer::SetupHitboxes( LagRecord *record ) {
 	// reset hitboxes.
 	m_hitboxes.clear( );
 
@@ -385,7 +353,7 @@ void AimPlayer::SetupHitboxes( LagRecord *record, bool history ) {
 	if ( only )
 		return;
 
-	std::vector< size_t > hitbox{ history ? g_menu.main.aimbot.hitbox_history.GetActiveIndices( ) : g_menu.main.aimbot.hitbox.GetActiveIndices( ) };
+	std::vector< size_t > hitbox{ g_menu.main.aimbot.hitbox.GetActiveIndices( ) };
 	if ( hitbox.empty( ) )
 		return;
 
@@ -511,8 +479,7 @@ void Aimbot::think( ) {
 	// run knifebot.
 	if ( g_cl.m_weapon_type == WEAPONTYPE_KNIFE && g_cl.m_weapon_id != ZEUS ) {
 
-		if ( g_menu.main.aimbot.knifebot.get( ) )
-			knife( );
+		knife( );
 
 		return;
 	}
@@ -538,9 +505,6 @@ void Aimbot::find( ) {
 	if ( m_targets.empty( ) )
 		return;
 
-	if ( g_cl.m_weapon_id == ZEUS && !g_menu.main.aimbot.zeusbot.get( ) )
-		return;
-
 	// iterate all targets.
 	for ( const auto &t : m_targets ) {
 		if ( t->m_records.empty( ) )
@@ -549,10 +513,10 @@ void Aimbot::find( ) {
 		// this player broke lagcomp.
 		// his bones have been resetup by our lagcomp.
 		// therfore now only the front record is valid.
-		if ( g_menu.main.aimbot.lagfix.get( ) && g_lagcomp.StartPrediction( t ) ) {
+		if ( g_lagcomp.StartPrediction( t ) ) {
 			LagRecord *front = t->m_records.front( ).get( );
 
-			t->SetupHitboxes( front, false );
+			t->SetupHitboxes( front );
 			if ( t->m_hitboxes.empty( ) )
 				continue;
 
@@ -574,7 +538,7 @@ void Aimbot::find( ) {
 			if ( !ideal )
 				continue;
 
-			t->SetupHitboxes( ideal, false );
+			t->SetupHitboxes( ideal );
 			if ( t->m_hitboxes.empty( ) )
 				continue;
 
@@ -591,7 +555,7 @@ void Aimbot::find( ) {
 			if ( !last || last == ideal )
 				continue;
 
-			t->SetupHitboxes( last, true );
+			t->SetupHitboxes( last );
 			if ( t->m_hitboxes.empty( ) )
 				continue;
 
@@ -623,8 +587,7 @@ void Aimbot::find( ) {
 		// set autostop shit.
 		m_stop = !( g_cl.m_buttons & IN_JUMP );
 
-		bool on = g_menu.main.aimbot.hitchance.get( ) && g_menu.main.config.mode.get( ) == 0;
-		bool hit = on && CheckHitchance( m_target, m_angle );
+		bool hit = CheckHitchance( m_target, m_angle );
 
 		// if we can scope.
 		bool can_scope = !g_cl.m_local->m_bIsScoped( ) && ( g_cl.m_weapon_id == AUG || g_cl.m_weapon_id == SG553 || g_cl.m_weapon_type == WEAPONTYPE_SNIPER_RIFLE );
@@ -635,22 +598,10 @@ void Aimbot::find( ) {
 				g_cl.m_cmd->m_buttons |= IN_ATTACK2;
 				return;
 			}
-
-			// hitchance fail.
-			else if ( g_menu.main.aimbot.zoom.get( ) == 2 && on && !hit ) {
-				g_cl.m_cmd->m_buttons |= IN_ATTACK2;
-				return;
-			}
 		}
 
-		if ( hit || !on ) {
-			// right click attack.
-			if ( g_menu.main.config.mode.get( ) == 1 && g_cl.m_weapon_id == REVOLVER )
-				g_cl.m_cmd->m_buttons |= IN_ATTACK2;
-
-			// left click attack.
-			else
-				g_cl.m_cmd->m_buttons |= IN_ATTACK;
+		if ( hit ) {
+			g_cl.m_cmd->m_buttons |= IN_ATTACK;
 		}
 	}
 }
@@ -660,7 +611,7 @@ bool Aimbot::CheckHitchance( Player *player, const ang_t &angle ) {
 	constexpr int   SEED_MAX = 255;
 
 	vec3_t     start{ g_cl.m_shoot_pos }, end, fwd, right, up, dir, wep_spread;
-	float      inaccuracy, spread;
+	float      inaccuracy, spread, friction;
 	CGameTrace tr;
 	size_t     total_hits{ }, needed_hits{ ( size_t )std::ceil( ( g_menu.main.aimbot.hitchance_amount.get( ) * SEED_MAX ) / HITCHANCE_MAX ) };
 
@@ -670,11 +621,12 @@ bool Aimbot::CheckHitchance( Player *player, const ang_t &angle ) {
 	// store off inaccuracy / spread ( these functions are quite intensive and we only need them once ).
 	inaccuracy = g_cl.m_weapon->GetInaccuracy( );
 	spread = g_cl.m_weapon->GetSpread( );
+	friction = g_csgo.sv_friction->GetFloat() * g_cl.m_local->m_surfaceFriction();
 
 	// iterate all possible seeds.
 	for ( int i{ }; i <= SEED_MAX; ++i ) {
 		// get spread.
-		wep_spread = g_cl.m_weapon->CalculateSpread( i, inaccuracy, spread );
+		wep_spread = g_cl.m_weapon->CalculateSpread( i, inaccuracy, spread, friction);
 
 		// get spread direction.
 		dir = ( fwd + ( right * wep_spread.x ) + ( up * wep_spread.y ) ).normalized( );
@@ -906,19 +858,20 @@ bool AimPlayer::GetBestAimPosition( vec3_t &aim, float &damage, LagRecord *recor
 
 	if ( g_cl.m_weapon_id == ZEUS ) {
 		dmg = pendmg = hp;
-		pen = true;
+		pen = false;
 	}
 
 	else {
+
 		dmg = g_menu.main.aimbot.minimal_damage.get( );
-		if ( g_menu.main.aimbot.minimal_damage_hp.get( ) )
-			dmg = std::ceil( ( dmg / 100.f ) * hp );
+		if (g_input.GetKeyState(g_menu.main.aimbot.damage_override.get()))
+			dmg = g_menu.main.aimbot.damage_override_value.get();
 
 		pendmg = g_menu.main.aimbot.penetrate_minimal_damage.get( );
-		if ( g_menu.main.aimbot.penetrate_minimal_damage_hp.get( ) )
-			pendmg = std::ceil( ( pendmg / 100.f ) * hp );
+		if (g_input.GetKeyState(g_menu.main.aimbot.damage_override.get()))
+			pendmg = g_menu.main.aimbot.damage_override_value.get();
 
-		pen = g_menu.main.aimbot.penetrate.get( );
+		pen = g_menu.main.aimbot.enable.get( );
 	}
 
 	// write all data of this record l0l.
@@ -1014,20 +967,13 @@ bool Aimbot::SelectTarget( LagRecord *record, const vec3_t &aim, float damage ) 
 	float dist, fov, height;
 	int   hp;
 
-	// fov check.
-	if ( g_menu.main.aimbot.fov.get( ) ) {
-		// if out of fov, retn false.
-		if ( math::GetFOV( g_cl.m_view_angles, g_cl.m_shoot_pos, aim ) > g_menu.main.aimbot.fov_amount.get( ) )
-			return false;
-	}
-
-	switch ( g_menu.main.aimbot.selection.get( ) ) {
+	switch (g_menu.main.aimbot.selection.get()) {
 
 		// distance.
 	case 0:
-		dist = ( record->m_pred_origin - g_cl.m_shoot_pos ).length( );
+		dist = (record->m_pred_origin - g_cl.m_shoot_pos).length();
 
-		if ( dist < m_best_dist ) {
+		if (dist < m_best_dist) {
 			m_best_dist = dist;
 			return true;
 		}
@@ -1036,9 +982,9 @@ bool Aimbot::SelectTarget( LagRecord *record, const vec3_t &aim, float damage ) 
 
 		// crosshair.
 	case 1:
-		fov = math::GetFOV( g_cl.m_view_angles, g_cl.m_shoot_pos, aim );
+		fov = math::GetFOV(g_cl.m_view_angles, g_cl.m_shoot_pos, aim);
 
-		if ( fov < m_best_fov ) {
+		if (fov < m_best_fov) {
 			m_best_fov = fov;
 			return true;
 		}
@@ -1047,7 +993,7 @@ bool Aimbot::SelectTarget( LagRecord *record, const vec3_t &aim, float damage ) 
 
 		// damage.
 	case 2:
-		if ( damage > m_best_damage ) {
+		if (damage > m_best_damage) {
 			m_best_damage = damage;
 			return true;
 		}
@@ -1057,9 +1003,9 @@ bool Aimbot::SelectTarget( LagRecord *record, const vec3_t &aim, float damage ) 
 		// lowest hp.
 	case 3:
 		// fix for retarded servers?
-		hp = std::min( 100, record->m_player->m_iHealth( ) );
+		hp = std::min(100, record->m_player->m_iHealth());
 
-		if ( hp < m_best_hp ) {
+		if (hp < m_best_hp) {
 			m_best_hp = hp;
 			return true;
 		}
@@ -1068,7 +1014,7 @@ bool Aimbot::SelectTarget( LagRecord *record, const vec3_t &aim, float damage ) 
 
 		// least lag.
 	case 4:
-		if ( record->m_lag < m_best_lag ) {
+		if (record->m_lag < m_best_lag) {
 			m_best_lag = record->m_lag;
 			return true;
 		}
@@ -1077,9 +1023,9 @@ bool Aimbot::SelectTarget( LagRecord *record, const vec3_t &aim, float damage ) 
 
 		// height.
 	case 5:
-		height = record->m_pred_origin.z - g_cl.m_local->m_vecOrigin( ).z;
+		height = record->m_pred_origin.z - g_cl.m_local->m_vecOrigin().z;
 
-		if ( height < m_best_height ) {
+		if (height < m_best_height) {
 			m_best_height = height;
 			return true;
 		}
@@ -1121,13 +1067,7 @@ void Aimbot::apply( ) {
 			g_visuals.DrawHitboxMatrix( m_record, colors::white, 10.f );
 		}
 
-		// nospread.
-		if ( g_menu.main.aimbot.nospread.get( ) && g_menu.main.config.mode.get( ) == 1 )
-			NoSpread( );
-
-		// norecoil.
-		if ( g_menu.main.aimbot.norecoil.get( ) )
-			g_cl.m_cmd->m_view_angles -= g_cl.m_local->m_aimPunchAngle( ) * g_csgo.weapon_recoil_scale->GetFloat( );
+		g_cl.m_cmd->m_view_angles -= g_cl.m_local->m_aimPunchAngle( ) * g_csgo.weapon_recoil_scale->GetFloat( );
 
 		// store fired shot.
 		g_shots.OnShotFire( m_target ? m_target : nullptr, m_target ? m_damage : -1.f, g_cl.m_weapon_info->m_bullets, m_target ? m_record : nullptr );
@@ -1135,18 +1075,4 @@ void Aimbot::apply( ) {
 		// set that we fired.
 		g_cl.m_shot = true;
 	}
-}
-
-void Aimbot::NoSpread( ) {
-	bool    attack2;
-	vec3_t  spread, forward, right, up, dir;
-
-	// revolver state.
-	attack2 = ( g_cl.m_weapon_id == REVOLVER && ( g_cl.m_cmd->m_buttons & IN_ATTACK2 ) );
-
-	// get spread.
-	spread = g_cl.m_weapon->CalculateSpread( g_cl.m_cmd->m_random_seed, attack2 );
-
-	// compensate.
-	g_cl.m_cmd->m_view_angles -= { -math::rad_to_deg( std::atan( spread.length_2d( ) ) ), 0.f, math::rad_to_deg( std::atan2( spread.x, spread.y ) ) };
 }

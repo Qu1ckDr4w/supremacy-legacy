@@ -38,17 +38,6 @@ void Hooks::LockCursor( ) {
 void Hooks::PlaySound( const char* name ) {
 	g_hooks.m_surface.GetOldMethod< PlaySound_t >( ISurface::PLAYSOUND )( this, name );
 
-	if( g_menu.main.misc.autoaccept.get( ) ) {
-
-		// auto accept.
-		if( FNV1a::get( name ) == HASH( "!UI/competitive_accept_beep.wav" ) && !g_csgo.m_engine->IsInGame( ) ) {
-			// accept match.
-			g_csgo.IsReady( );
-
-			// notify user.
-			g_csgo.m_surface->PlaySound( XOR( "ui/xp_levelup.wav" ) );
-		}
-	}
 }
 
 void Hooks::OnScreenSizeChanged( int oldwidth, int oldheight ) {

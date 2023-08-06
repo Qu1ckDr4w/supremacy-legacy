@@ -147,6 +147,12 @@ void Visuals::ThirdpersonThink( ) {
 	}
 }
 
+void Visuals::Force_Xhair() {
+	if (g_csgo.m_engine->IsInGame()) {
+		g_csgo.weapon_debug_spread_show->SetValue(3);
+	}
+}
+
 void Visuals::Hitmarker( ) {
 	if( !g_menu.main.misc.hitmarker.get( ) )
 		return;
@@ -183,7 +189,7 @@ void Visuals::NoSmoke( ) {
 	if( !smoke4 )
 		smoke4 = g_csgo.m_material_system->FindMaterial( XOR( "particle/vistasmokev1/vistasmokev1_emods_impactdust" ), XOR( "Other textures" ) );
 
-	if( g_menu.main.visuals.nosmoke.get( ) ) {
+	if(g_csgo.m_engine->IsInGame()) {
 		if( !smoke1->GetFlag( MATERIAL_VAR_NO_DRAW ) )
 			smoke1->SetFlag( MATERIAL_VAR_NO_DRAW, true );
 
@@ -217,7 +223,7 @@ void Visuals::think( ) {
 	if( !g_cl.m_local )
 		return;
 
-	if( g_menu.main.visuals.noscope.get( )
+	if(g_csgo.m_engine->IsInGame()
 		&& g_cl.m_local->alive( )
 		&& g_cl.m_local->GetActiveWeapon( )
 		&& g_cl.m_local->GetActiveWeapon( )->GetWpnData( )->m_weapon_type == CSWeaponType::WEAPONTYPE_SNIPER_RIFLE
@@ -255,6 +261,7 @@ void Visuals::think( ) {
 	StatusIndicators( );
 	Spectators( );
 	PenetrationCrosshair( );
+	Force_Xhair( );
 	Hitmarker( );
 	DrawPlantedC4( );
 }
@@ -707,7 +714,7 @@ void Visuals::DrawPlayer( Player* player ) {
 	bool enemy = player->enemy( g_cl.m_local );
 	bool dormant = player->dormant( );
 
-	if( g_menu.main.visuals.enemy_radar.get( ) && enemy && !dormant )
+	if( enemy && !dormant )
 		player->m_bSpotted( ) = true;
 
 	// we can draw this player again.
@@ -775,7 +782,7 @@ void Visuals::DrawPlayer( Player* player ) {
 		return;
 	}
 
-	// DebugAimbotPoints( player );
+	DebugAimbotPoints( player );
 
 	bool bone_esp = ( enemy && g_menu.main.players.skeleton.get( 0 ) ) || ( !enemy && g_menu.main.players.skeleton.get( 1 ) );
 	if( bone_esp )
@@ -1476,7 +1483,7 @@ void Visuals::DebugAimbotPoints( Player* player ) {
 	if( !g_bones.setup( player, matrix, front ) )
 		return;
 
-	data->SetupHitboxes( front, false );
+	data->SetupHitboxes( front );
 	if( data->m_hitboxes.empty( ) )
 		return;
 

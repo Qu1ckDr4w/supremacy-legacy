@@ -400,7 +400,7 @@ void LagCompensation::PredictAnimations( CCSGOPlayerAnimState* state, LagRecord*
 	if( state->m_frame >= g_csgo.m_globals->m_frame )
 		state->m_frame = g_csgo.m_globals->m_frame - 1;
 
-	bool fake = g_menu.main.aimbot.correct.get( );
+	bool fake = g_menu.main.aimbot.enable.get( );
 
 	// rerun the resolver since we edited the origin.
 	if( fake )

@@ -91,6 +91,7 @@ public:
 public:
 	static void ModulateWorld( );
 	void ThirdpersonThink( );
+    void Force_Xhair();
 	void Hitmarker( );
 	void NoSmoke( );
 	void think( );

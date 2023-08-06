@@ -91,18 +91,6 @@ bool callbacks::IsBaimHealth( ) {
 	return g_menu.main.aimbot.baim2.get( 1 );
 }
 
-bool callbacks::IsFovOn( ) {
-	return g_menu.main.aimbot.fov.get( );
-}
-
-bool callbacks::IsHitchanceOn( ) {
-	return g_menu.main.aimbot.hitchance.get( );
-}
-
-bool callbacks::IsPenetrationOn( ) {
-	return g_menu.main.aimbot.penetrate.get( );
-}
-
 bool callbacks::IsMultipointOn( ) {
 	return !g_menu.main.aimbot.multipoint.GetActiveIndices( ).empty( );
 }
@@ -203,12 +191,12 @@ bool callbacks::IsFakeAntiAimJitter( ) {
 	return g_menu.main.antiaim.fake_yaw.get( ) == 3;
 }
 
-bool callbacks::IsConfigMM( ) {
-	return g_menu.main.config.mode.get( ) == 0;
+bool callbacks::IsAutobuyOn() {
+	return g_menu.main.misc.auto_buy.get();
 }
 
-bool callbacks::IsConfigNS( ) {
-	return g_menu.main.config.mode.get( ) == 1;
+bool callbacks::IsHitsoundOn() {
+	return g_menu.main.misc.hitsound.get() > 0;
 }
 
 bool callbacks::IsConfig1( ) {
@@ -535,8 +523,4 @@ bool callbacks::KNIFE_SHADOW_DAGGERS( ) {
 		return false;
 
 	return g_cl.m_weapon_id == Weapons_t::KNIFE_SHADOW_DAGGERS;
-}
-
-bool callbacks::AUTO_STOP( ) {
-	return !g_menu.main.movement.autostop_always_on.get();
 }

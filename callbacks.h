@@ -17,9 +17,6 @@ namespace callbacks {
 	void ConfigSave( );
 
 	bool IsBaimHealth( );
-	bool IsFovOn( );
-	bool IsHitchanceOn( );
-	bool IsPenetrationOn( );
 	bool IsMultipointOn( );
 	bool IsMultipointBodyOn( );
 
@@ -47,8 +44,9 @@ namespace callbacks {
 	bool IsFakeAntiAimRelative( );
 	bool IsFakeAntiAimJitter( );
 	
-	bool IsConfigMM( );
-	bool IsConfigNS( );
+	bool IsAutobuyOn();
+	bool IsHitsoundOn();
+	
 	bool IsConfig1( );
 	bool IsConfig2( );
 	bool IsConfig3( );
@@ -100,5 +98,4 @@ namespace callbacks {
 	bool KNIFE_BOWIE( );
 	bool KNIFE_BUTTERFLY( );
 	bool KNIFE_SHADOW_DAGGERS( );
-	bool AUTO_STOP( );
 }

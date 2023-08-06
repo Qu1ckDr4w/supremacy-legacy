@@ -122,10 +122,6 @@ void Shots::OnImpact( IGameEvent *evt ) {
 	while ( m_impacts.size( ) > 128 )
 		m_impacts.pop_back( );
 
-	// nospread mode.
-	if ( g_menu.main.config.mode.get( ) == 1 )
-		return;
-
 	// not in nospread mode, see if the shot missed due to spread.
 	Player *target = shot->m_target;
 	if ( !target )
@@ -247,12 +243,25 @@ void Shots::OnHurt( IGameEvent *evt ) {
 		g_visuals.m_hit_duration = 1.f;
 		g_visuals.m_hit_start = g_csgo.m_globals->m_curtime;
 		g_visuals.m_hit_end = g_visuals.m_hit_start + g_visuals.m_hit_duration;
+	}
 
-		g_csgo.m_sound->EmitAmbientSound( XOR( "buttons/arena_switch_press_02.wav" ), 1.f );
+	if (g_menu.main.misc.hitsound.get() > 0) {
+
+		float volume = g_menu.main.misc.hitsound_volume.get(); 
+
+		if (g_menu.main.misc.hitsound.get() == 1) {
+			g_csgo.m_sound->EmitAmbientSound(XOR("buttons/arena_switch_press_02.wav"), volume);
+		}
+		if (g_menu.main.misc.hitsound.get() == 2) {
+			g_csgo.m_sound->EmitAmbientSound(XOR("buttons/bell1.wav"), volume);
+		}
+		if (g_menu.main.misc.hitsound.get() == 3) {
+			g_csgo.m_sound->EmitAmbientSound(XOR("buttons/blip1.wav"), volume);
+		}
 	}
 
 	// print this shit.
-	if ( g_menu.main.misc.notifications.get( 1 ) ) {
+	if ( g_menu.main.config.notifications.get( 1 ) ) {
 		std::string out = tfm::format( XOR( "hit %s in the %s for %i (%i remaining)\n" ), name, m_groups[ group ], ( int )damage, hp );
 		g_notify.add( out );
 	}
@@ -331,25 +340,5 @@ void Shots::OnHurt( IGameEvent *evt ) {
 	// shoot at this 5 more times.
 	if ( group == HITGROUP_HEAD ) {
 		LagRecord *record = hit.m_impact->m_shot->m_record;
-
-		//switch( record->m_mode ) {
-		//case Resolver::Modes::RESOLVE_STAND:
-		//	data->m_prefer_stand.clear( );
-		//	data->m_prefer_stand.push_front( math::NormalizedAngle( record->m_eye_angles.y - record->m_lbyt ) );
-		//	break;
-
-		//case Resolver::Modes::RESOLVE_AIR:
-		//	if( g_menu.main.config.mode.get( ) == 1 ) {
-		//		data->m_prefer_air.clear( );
-		//		data->m_prefer_air.push_front( math::NormalizedAngle( record->m_eye_angles.y - record->m_away ) );
-		//
-		//		g_notify.add( tfm::format( "air hit %f\n", data->m_prefer_air.front( ) ) );
-		//	}
-		//
-		//	break;
-
-		//default:
-		//	break;
-		//}
 	}
 }

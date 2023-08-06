@@ -1,42 +1,101 @@
 #include "includes.h"
 
-#define NET_FRAMES_BACKUP 64 // must be power of 2. 
-#define NET_FRAMES_MASK ( NET_FRAMES_BACKUP - 1 )
+int Hooks::SendDatagram(void* data) {
+	if (!IsValidSendDatagram())
+		return g_hooks.m_net_channel.GetOldMethod<SendDatagram_t>(INetChannel::SENDDATAGRAM)(this, data);
 
-int Hooks::SendDatagram( void* data ) {
-	int backup2 = g_csgo.m_net->m_in_seq;
+	const auto net_chan = (INetChannel*)this;
 
-	if( g_aimbot.m_fake_latency ) {
-		int ping = g_menu.main.misc.fake_latency_amt.get( );
+	const auto backup_in_seq = net_chan->m_in_seq;
+	const auto backup_in_rel_state = net_chan->m_in_rel_state;
 
-		// the target latency.
-		float correct = std::max( 0.f, ( ping / 1000.f ) - g_cl.m_latency - g_cl.m_lerp );
+	auto flow_outgoing = g_csgo.m_engine->GetNetChannelInfo()->GetLatency(0);
+	auto target_ping = (g_menu.main.misc.fake_latency_amt.get() / 1000.f);
 
-		g_csgo.m_net->m_in_seq += 2 * NET_FRAMES_MASK - static_cast< uint32_t >( NET_FRAMES_MASK * correct );
+	if (flow_outgoing < target_ping) {
+		auto target_in_seq = net_chan->m_in_seq - game::TIME_TO_TICKS(target_ping - flow_outgoing);
+		net_chan->m_in_seq = target_in_seq;
+
+		SetInRelStateFromIncSeq(target_in_seq);
 	}
 
-	int ret = g_hooks.m_net_channel.GetOldMethod< SendDatagram_t >( INetChannel::SENDDATAGRAM )( this, data );
+	int ret = g_hooks.m_net_channel.GetOldMethod<SendDatagram_t>(INetChannel::SENDDATAGRAM)(this, data);
 
-	g_csgo.m_net->m_in_seq       = backup2;
-
+	net_chan->m_in_seq = backup_in_seq;
+	net_chan->m_in_rel_state = backup_in_rel_state;
 	return ret;
 }
 
-void Hooks::ProcessPacket( void* packet, bool header ) {
-	g_hooks.m_net_channel.GetOldMethod< ProcessPacket_t >( INetChannel::PROCESSPACKET )( this, packet, header );
+void Hooks::ProcessPacket(void* packet, bool header) {
+	g_hooks.m_net_channel.GetOldMethod<ProcessPacket_t>(INetChannel::PROCESSPACKET)(this, packet, header);
 
-	g_cl.UpdateIncomingSequences( );
+	g_cl.UpdateIncomingSequences();
 
-	// get this from CL_FireEvents string "Failed to execute event for classId" in engine.dll
-	for( CEventInfo* it{ g_csgo.m_cl->m_events }; it != nullptr; it = it->m_next ) {
-		if( !it->m_class_id )
-			continue;
-
-		// set all delays to instant.
-		it->m_fire_delay = 0.f;
-	}
+	// set all delays to instant.
+	SetEventDelaysToZero();
 
 	// game events are actually fired in OnRenderStart which is WAY later after they are received
-	// effective delay by lerp time, now we call them right after theyre received (all receive proxies are invoked without delay).
-	g_csgo.m_engine->FireEvents( );
+	// effective delay by lerp time, now we call them right after they're received (all receive proxies are invoked without delay).
+	g_csgo.m_engine->FireEvents();
+
+	if (g_csgo.m_cl->m_net_channel) {
+		if (g_cl.m_local && g_cl.m_local->alive()) {
+			AddIncomingSequence();
+
+			// Remove outdated incoming sequences.
+			RemoveOutdatedIncomingSequences();
+		}
+		else {
+			ClearIncomingSequences();
+		}
+	}
+}
+
+bool Hooks::IsValidSendDatagram() {
+	return (this && g_csgo.m_engine->IsInGame() && g_csgo.m_net && g_cl.m_local && g_cl.m_local->alive()
+		&& (INetChannel*)this == g_csgo.m_cl->m_net_channel && g_aimbot.m_fake_latency && g_cl.m_processing);
+}
+
+void Hooks::SetInRelStateFromIncSeq(int target_in_seq) {
+	const auto net_chan = (INetChannel*)this;
+
+	for (auto& seq : g_cl.m_inc_seq) {
+		if (seq.m_in_seq == target_in_seq) {
+			net_chan->m_in_rel_state = seq.m_in_rel_state;
+			break;
+		}
+	}
+}
+
+void Hooks::SetEventDelaysToZero() {
+	for (CEventInfo* it{ g_csgo.m_cl->m_events }; it != nullptr; it = it->m_next) {
+		if (!it->m_class_id)
+			continue;
+
+		it->m_fire_delay = 0.f;
+	}
+}
+
+void Hooks::AddIncomingSequence() {
+	const auto net_chan = (INetChannel*)this;
+	g_cl.m_inc_seq.push_back(Client::incoming_seq_t{ net_chan->m_in_seq, net_chan->m_in_rel_state });
+}
+
+void Hooks::RemoveOutdatedIncomingSequences() {
+	const auto net_chan = (INetChannel*)this;
+	auto delta = [](int a, int b) { return std::abs(a - b); };
+
+	for (auto it = g_cl.m_inc_seq.begin(); it != g_cl.m_inc_seq.end();) {
+		auto delta_seq = delta(net_chan->m_in_seq, it->m_in_seq);
+		if (delta_seq > 128) {
+			it = g_cl.m_inc_seq.erase(it);
+		}
+		else {
+			++it;
+		}
+	}
+}
+
+void Hooks::ClearIncomingSequences() {
+	g_cl.m_inc_seq.clear();
 }

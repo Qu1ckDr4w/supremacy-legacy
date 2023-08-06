@@ -8,11 +8,11 @@ void Movement::JumpRelated( ) {
 
 	if( ( g_cl.m_cmd->m_buttons & IN_JUMP ) && !( g_cl.m_flags & FL_ONGROUND ) ) {
 		// bhop.
-		if( g_menu.main.movement.bhop.get( ) )
+		if(g_csgo.m_engine->IsInGame())
 			g_cl.m_cmd->m_buttons &= ~IN_JUMP;
 
 		// duck jump ( crate jump ).
-		if( g_menu.main.movement.airduck.get( ) )
+		if( g_menu.main.misc.airduck.get( ) )
 			g_cl.m_cmd->m_buttons |= IN_DUCK;
 	}
 }
@@ -61,47 +61,6 @@ void Movement::Strafe( ) {
 
 	// cancel out any forwardmove values.
 	g_cl.m_cmd->m_forward_move = 0.f;
-
-	// do allign strafer.
-	if( g_input.GetKeyState( g_menu.main.movement.astrafe.get( ) ) ) {
-		float angle = std::max( m_ideal2, 4.f );
-
-		if( angle > m_ideal2 && !( m_strafe_index % 5 ) )
-			angle = m_ideal2;
-
-		// add the computed step to the steps of the previous circle iterations.
-		m_circle_yaw = math::NormalizedAngle( m_circle_yaw + angle );
-
-		// apply data to usercmd.
-		g_cl.m_cmd->m_view_angles.y = m_circle_yaw;
-		g_cl.m_cmd->m_side_move = -450.f;
-
-		return;
-	}
-
-	// do ciclestrafer
-	else if( g_input.GetKeyState( g_menu.main.movement.cstrafe.get( ) ) ) {
-		// if no duck jump.
-		if( !g_menu.main.movement.airduck.get( ) ) {
-			// crouch to fit into narrow areas.
-			g_cl.m_cmd->m_buttons |= IN_DUCK;
-		}
-
-		DoPrespeed( );
-		return;
-	}
-
-	else if( g_input.GetKeyState( g_menu.main.movement.zstrafe.get( ) ) ) {
-		float freq = ( g_menu.main.movement.z_freq.get( ) * 0.2f ) * g_csgo.m_globals->m_realtime;
-
-		// range [ 1, 100 ], aka grenerates a factor.
-		float factor = g_menu.main.movement.z_dist.get( ) * 0.5f;
-
-		g_cl.m_cmd->m_view_angles.y += ( factor * std::sin( freq ) );
-	}
-
-	if( !g_menu.main.movement.autostrafe.get( ) )
-		return;
 
 	// get our viewangle change.
 	delta = math::NormalizedAngle( g_cl.m_cmd->m_view_angles.y - m_old_yaw );
@@ -332,10 +291,6 @@ void Movement::FixMove( CUserCmd *cmd, const ang_t &wish_angles ) {
 	float   delta, len;
 	ang_t   move_angle;
 
-	// roll nospread fix.
-	if( !( g_cl.m_flags & FL_ONGROUND ) && cmd->m_view_angles.z != 0.f )
-		cmd->m_side_move = 0.f;
-
 	// convert movement to vector.
 	move = { cmd->m_forward_move, cmd->m_side_move, 0.f };
 
@@ -414,7 +369,7 @@ void Movement::FixMove( CUserCmd *cmd, const ang_t &wish_angles ) {
 
 void Movement::AutoPeek( ) {
 	// set to invert if we press the button.
-	if( g_input.GetKeyState( g_menu.main.movement.autopeek.get( ) ) ) {
+	if( g_input.GetKeyState( g_menu.main.misc.autopeek.get( ) ) ) {
 		if( g_cl.m_old_shot )
 			m_invert = true;
 
@@ -429,8 +384,8 @@ void Movement::AutoPeek( ) {
 
 	else m_invert = false;
 
-	bool can_stop = g_menu.main.movement.autostop_always_on.get( ) || ( !g_menu.main.movement.autostop_always_on.get( ) && g_input.GetKeyState( g_menu.main.movement.autostop.get( ) ) );
-	if( ( g_input.GetKeyState( g_menu.main.movement.autopeek.get( ) ) || can_stop ) && g_aimbot.m_stop ) {
+	bool can_stop = g_menu.main.aimbot.autostop_always_on.get( ) || ( !g_menu.main.aimbot.autostop_always_on.get( ) );
+	if( ( g_input.GetKeyState( g_menu.main.misc.autopeek.get( ) ) || can_stop ) && g_aimbot.m_stop ) {
 		Movement::QuickStop( );
 	}
 }
@@ -466,19 +421,11 @@ void Movement::FakeWalk( ) {
 	vec3_t velocity{ g_cl.m_local->m_vecVelocity( ) };
 	int    ticks{ }, max{ 16 };
 
-	if( !g_input.GetKeyState( g_menu.main.movement.fakewalk.get( ) ) )
+	if( !g_input.GetKeyState( g_menu.main.misc.fakewalk.get( ) ) )
 		return;
 
 	if( !g_cl.m_local->GetGroundEntity( ) )
 		return;
-
-	// user was running previously and abrubtly held the fakewalk key
-	// we should quick-stop under this circumstance to hit the 0.22 flick
-	// perfectly, and speed up our fakewalk after running even more.
-	//if( g_cl.m_initial_flick ) {
-	//	Movement::QuickStop( );
-	//	return;
-	//}
 	
 	// reference:
 	// https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/game/shared/gamemovement.cpp#L1612

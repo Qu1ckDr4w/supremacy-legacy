@@ -6,29 +6,19 @@ public:
 	Checkbox	  enable;
 	Checkbox	  silent;
 	Dropdown	  selection;
-	Checkbox	  fov;
-	Slider		  fov_amount;
 	MultiDropdown hitbox;
-	MultiDropdown hitbox_history;
 	MultiDropdown multipoint;
 	Slider		  scale;
 	Slider		  body_scale;
 	Slider		  minimal_damage;
-	Checkbox	  minimal_damage_hp;
-	Checkbox	  penetrate;
 	Slider		  penetrate_minimal_damage;
-	Checkbox	  penetrate_minimal_damage_hp;
-	Checkbox      knifebot;
-	Checkbox	  zeusbot;
+	Keybind       damage_override;
+	Slider		  damage_override_value;
 
 	// col2.
 	Dropdown      zoom;
-	Checkbox      nospread;
-	Checkbox      norecoil;
-	Checkbox      hitchance;
+	Checkbox	  autostop_always_on;
 	Slider	      hitchance_amount;
-	Checkbox      lagfix;
-	Checkbox	  correct;
 	MultiDropdown baim1;
 	MultiDropdown baim2;
 	Slider        baim_hp;
@@ -48,18 +38,8 @@ public:
 		selection.setup( XOR( "target selection" ), XOR( "selection" ), { XOR( "distance" ), XOR( "crosshair" ), XOR( "damage" ), XOR( "health" ), XOR( "lag" ), XOR( "height" ) } );
 		RegisterElement( &selection );
 
-		fov.setup( XOR( "angle limit" ), XOR( "fov" ) );
-		RegisterElement( &fov );
-
-		fov_amount.setup( "", XOR( "fov_amount" ), 1.f, 180.f, false, 0, 180.f, 1.f, XOR( L"°" ) );
-		fov_amount.AddShowCallback( callbacks::IsFovOn );
-		RegisterElement( &fov_amount );
-
 		hitbox.setup( XOR( "hitbox" ), XOR( "hitbox" ), { XOR( "head" ), XOR( "chest" ), XOR( "body" ), XOR( "arms" ), XOR( "legs" ) } );
 		RegisterElement( &hitbox );
-
-		hitbox_history.setup( XOR( "hitbox history" ), XOR( "hitbox_history" ), { XOR( "head" ), XOR( "chest" ), XOR( "body" ), XOR( "arms" ), XOR( "legs" ) } );
-		RegisterElement( &hitbox_history );
 
 		multipoint.setup( XOR( "multi-point" ), XOR( "multipoint" ), { XOR( "head" ), XOR( "chest" ), XOR( "body" ), XOR( "legs" ) } );
 		RegisterElement( &multipoint );
@@ -75,51 +55,24 @@ public:
 		minimal_damage.setup( XOR( "minimal damage" ), XOR( "minimal_damage" ), 1.f, 100.f, true, 0, 40.f, 1.f );
 		RegisterElement( &minimal_damage );
 
-		minimal_damage_hp.setup( XOR( "scale damage on hp" ), XOR( "minimal_damage_hp" ) );
-		RegisterElement( &minimal_damage_hp );
-
-		penetrate.setup( XOR( "penetrate walls" ), XOR( "penetrate" ) );
-		RegisterElement( &penetrate );
-
 		penetrate_minimal_damage.setup( "", XOR( "penetrate_minimal_damage" ), 1.f, 100.f, false, 0, 30.f, 1.f );
-		penetrate_minimal_damage.AddShowCallback( callbacks::IsPenetrationOn );
 		RegisterElement( &penetrate_minimal_damage );
 
-		penetrate_minimal_damage_hp.setup( XOR( "scale penetration damage on hp" ), XOR( "penetrate_minimal_damage_hp" ) );
-		penetrate_minimal_damage_hp.AddShowCallback( callbacks::IsPenetrationOn );
-		RegisterElement( &penetrate_minimal_damage_hp );
+		damage_override.setup(XOR("damage override"), XOR("damage_override"));
+		RegisterElement(&damage_override);
 
-		knifebot.setup( XOR( "aimbot with knife" ), XOR( "knifebot" ) );
-		RegisterElement( &knifebot );
-
-		zeusbot.setup( XOR( "aimbot with taser" ), XOR( "zeusbot" ) );
-		RegisterElement( &zeusbot );
+		damage_override_value.setup("", XOR("damage_override_value"), 1.f, 100.f, false, 0, 30.f, 1.f);
+		RegisterElement(&damage_override_value);
 
 		// col2.
-		zoom.setup( XOR( "auto scope" ), XOR( "zoom" ), { XOR( "off" ), XOR( "always" ), XOR( "hitchance fail" ) } );
+		zoom.setup( XOR( "auto scope" ), XOR( "zoom" ), { XOR( "off" ), XOR( "always" ) } );
 		RegisterElement( &zoom, 1 );
 
-		nospread.setup( XOR( "compensate spread" ), XOR( "nospread" ) );
-		nospread.AddShowCallback( callbacks::IsConfigNS );
-		RegisterElement( &nospread, 1 );
-
-		norecoil.setup( XOR( "compensate recoil" ), XOR( "norecoil" ) );
-		RegisterElement( &norecoil, 1 );
-
-		hitchance.setup( XOR( "hitchance" ), XOR( "hitchance" ) );
-		hitchance.AddShowCallback( callbacks::IsConfigMM );
-		RegisterElement( &hitchance, 1 );
+		autostop_always_on.setup(XOR("automatic stop always on"), XOR("auto_stop_always"));
+		RegisterElement(&autostop_always_on, 1);
 
 		hitchance_amount.setup( "", XOR( "hitchance_amount" ), 1.f, 100.f, false, 0, 50.f, 1.f, XOR( L"%" ) );
-		hitchance_amount.AddShowCallback( callbacks::IsConfigMM );
-		hitchance_amount.AddShowCallback( callbacks::IsHitchanceOn );
 		RegisterElement( &hitchance_amount, 1 );
-
-		lagfix.setup( XOR( "predict fake-lag" ), XOR( "lagfix" ) );
-		RegisterElement( &lagfix, 1 );
-
-		correct.setup( XOR( "correct anti-aim" ), XOR( "correct" ) );
-		RegisterElement( &correct, 1 );
 
 		baim1.setup( XOR( "prefer body aim" ), XOR( "baim1" ), { XOR( "always" ), XOR( "lethal" ), XOR( "lethal x2" ), XOR( "fake" ), XOR( "in air" ) } );
 		RegisterElement( &baim1, 1 );
@@ -583,21 +536,14 @@ public:
 	Checkbox      disableteam;
 	Dropdown	  world;
 	Checkbox      transparent_props;
-	Checkbox      enemy_radar;
 
 	// col2.
-	Checkbox      novisrecoil;
-	Checkbox      nosmoke;
-	Checkbox      nofog;
-	Checkbox      noflash;
-	Checkbox      noscope;
 	Checkbox      fov;
 	Slider        fov_amt;
 	Checkbox      fov_scoped;
 	Checkbox      viewmodel_fov;
 	Slider        viewmodel_fov_amt;
 	Checkbox      spectators;
-	Checkbox      force_xhair;
 	Checkbox      spread_xhair;
 	Colorpicker   spread_xhair_col;
 	Slider        spread_xhair_blend;
@@ -649,25 +595,7 @@ public:
 		transparent_props.SetCallback( Visuals::ModulateWorld );
 		RegisterElement( &transparent_props );
 
-		enemy_radar.setup( XOR( "force enemies on radar" ), XOR( "enemy_radar" ) );
-		RegisterElement( &enemy_radar );
-
 		// col2.
-		novisrecoil.setup( XOR( "remove visual recoil" ), XOR( "novisrecoil" ) );
-		RegisterElement( &novisrecoil, 1 );
-
-		nosmoke.setup( XOR( "remove smoke grenades" ), XOR( "nosmoke" ) );
-		RegisterElement( &nosmoke, 1 );
-
-		nofog.setup( XOR( "remove fog" ), XOR( "nofog" ) );
-		RegisterElement( &nofog, 1 );
-
-		noflash.setup( XOR( "remove flashbangs" ), XOR( "noflash" ) );
-		RegisterElement( &noflash, 1 );
-
-		noscope.setup( XOR( "remove scope" ), XOR( "noscope" ) );
-		RegisterElement( &noscope, 1 );
-
 		fov.setup( XOR( "override fov" ), XOR( "fov" ) );
 		RegisterElement( &fov, 1 );
 
@@ -685,9 +613,6 @@ public:
 
 		spectators.setup( XOR( "show spectator list" ), XOR( "spectators" ) );
 		RegisterElement( &spectators, 1 );
-
-		force_xhair.setup( XOR( "force crosshair" ), XOR( "force_xhair" ) );
-		RegisterElement( &force_xhair, 1 );
 
 		spread_xhair.setup( XOR( "visualize spread" ), XOR( "spread_xhair" ) );
 		RegisterElement( &spread_xhair, 1 );
@@ -722,65 +647,6 @@ public:
 		thirdperson.setup( XOR( "thirdperson" ), XOR( "thirdperson" ) );
 		thirdperson.SetToggleCallback( callbacks::ToggleThirdPerson );
 		RegisterElement( &thirdperson, 1 );
-	}
-};
-
-class MovementTab : public Tab {
-public:
-	Checkbox bhop;
-	Checkbox airduck;
-	Checkbox autostrafe;
-	Keybind  cstrafe;
-	Keybind  astrafe;
-	Keybind  zstrafe;
-	Slider   z_freq;
-	Slider   z_dist;
-
-	Keybind  fakewalk;
-	Keybind  autopeek;
-	Keybind  autostop;
-	Checkbox autostop_always_on;
-
-public:
-	void init( ) {
-		SetTitle( XOR( "movement" ) );
-
-		bhop.setup( XOR( "automatic jump" ), XOR( "bhop" ) );
-		RegisterElement( &bhop );
-
-		airduck.setup( XOR( "duck in air" ), XOR( "airduck" ) );
-		RegisterElement( &airduck );
-
-		autostrafe.setup( XOR( "automatic strafe" ), XOR( "autostrafe" ) );
-		RegisterElement( &autostrafe );
-
-		cstrafe.setup( XOR( "c-strafe" ), XOR( "cstrafe" ) );
-		RegisterElement( &cstrafe );
-
-		astrafe.setup( XOR( "a-strafe" ), XOR( "astrafe" ) );
-		RegisterElement( &astrafe );
-
-		zstrafe.setup( XOR( "z-strafe" ), XOR( "zstrafe" ) );
-		RegisterElement( &zstrafe );
-
-		z_freq.setup( "", XOR( "z_freq" ), 1.f, 100.f, false, 0, 50.f, 0.5f, XOR( L"hz" ) );
-		RegisterElement( &z_freq );
-
-		z_dist.setup( "", XOR( "z_dist" ), 1.f, 100.f, false, 0, 20.f, 0.5f, XOR( L"%" ) );
-		RegisterElement( &z_dist );
-
-		fakewalk.setup( XOR( "fake-walk" ), XOR( "fakewalk" ) );
-		RegisterElement( &fakewalk, 1 );
-
-		autopeek.setup( XOR( "automatic peek" ), XOR( "autopeek" ) );
-		RegisterElement( &autopeek, 1 );
-
-		autostop_always_on.setup( XOR( "automatic stop always on" ), XOR( "auto_stop_always" ) );
-		RegisterElement( &autostop_always_on, 1 );
-
-		autostop.setup( XOR( "automatic stop" ), XOR( "autostop" ) );
-		autostop.AddShowCallback( callbacks::AUTO_STOP );
-		RegisterElement( &autostop, 1 );
 	}
 };
 
@@ -1895,122 +1761,79 @@ public:
 class MiscTab : public Tab {
 public:
 	// col1.
-	MultiDropdown buy1;
-	MultiDropdown buy2;
-	MultiDropdown buy3;
-	MultiDropdown notifications;
-	Keybind       last_tick_defuse;
+	Checkbox      airduck;
+	Keybind		  autopeek;
+	Keybind		  fakewalk;
 	Keybind       fake_latency;
 	Slider		  fake_latency_amt;
 
 	// col2.
-	Checkbox autoaccept;
-	Checkbox unlock;
-	Checkbox hitmarker;
-	Checkbox ragdoll_force;
-	Checkbox killfeed;
-	Checkbox ranks;
+	Checkbox      auto_buy;
+	Dropdown      primary;
+	Dropdown      secondary;
+	MultiDropdown utility;
+	Checkbox	  hitmarker;
+	Dropdown	  hitsound;
+	Slider		  hitsound_volume;
+	Checkbox	  killfeed;
 
 public:
 	void init( ) {
 		SetTitle( XOR( "misc" ) );
 
-		buy1.setup( XOR( "auto buy items" ), XOR( "auto_buy1" ),
-			{
-				XOR( "galilar" ),
-				XOR( "famas" ),
-				XOR( "ak47" ),
-				XOR( "m4a1" ),
-				XOR( "m4a1_silencer" ),
-				XOR( "ssg08" ),
-				XOR( "aug" ),
-				XOR( "sg556" ),
-				XOR( "awp" ),
-				XOR( "scar20" ),
-				XOR( "g3sg1" ),
-				XOR( "nova" ),
-				XOR( "xm1014" ),
-				XOR( "mag7" ),
-				XOR( "m249" ),
-				XOR( "negev" ),
-				XOR( "mac10" ),
-				XOR( "mp9" ),
-				XOR( "mp7" ),
-				XOR( "ump45" ),
-				XOR( "p90" ),
-				XOR( "bizon" ),
-			} );
-		RegisterElement( &buy1 );
+		airduck.setup(XOR("duck in air"), XOR("airduck"));
+		RegisterElement(&airduck);
 
-		buy2.setup( "", XOR( "auto_buy2" ),
-			{
-				XOR( "glock" ),
-				XOR( "hkp2000" ),
-				XOR( "usp_silencer" ),
-				XOR( "elite" ),
-				XOR( "p250" ),
-				XOR( "tec9" ),
-				XOR( "fn57" ),
-				XOR( "deagle" ),
-			}, false );
-		RegisterElement( &buy2 );
+		autopeek.setup(XOR("automatic peek"), XOR("autopeek"));
+		RegisterElement(&autopeek);
 
-		buy3.setup( "", XOR( "auto_buy3" ),
-			{
-				XOR( "vest" ),
-				XOR( "vesthelm" ),
-				XOR( "taser" ),
-				XOR( "defuser" ),
-				XOR( "heavyarmor" ),
-				XOR( "molotov" ),
-				XOR( "incgrenade" ),
-				XOR( "decoy" ),
-				XOR( "flashbang" ),
-				XOR( "hegrenade" ),
-				XOR( "smokegrenade" ),
-			}, false );
-		RegisterElement( &buy3 );
-
-		notifications.setup( XOR( "notifications" ), XOR( "notifications" ), { XOR( "matchmaking" ), XOR( "damage" ), XOR( "purchases" ), XOR( "bomb" ), XOR( "defuse" ) } );
-		RegisterElement( &notifications );
-
-		last_tick_defuse.setup( XOR( "last tick defuse" ), XOR( "last_tick_defuse" ) );
-		RegisterElement( &last_tick_defuse );
+		fakewalk.setup(XOR("fake-walk"), XOR("fakewalk"));
+		RegisterElement(&fakewalk);
 
 		fake_latency.setup( XOR( "fake latency" ), XOR( "fake_latency" ) );
 		fake_latency.SetToggleCallback( callbacks::ToggleFakeLatency );
 		RegisterElement( &fake_latency );
 
-		fake_latency_amt.setup( "", XOR( "fake_latency_amt" ), 50.f, 800.f, false, 0, 200.f, 50.f, XOR( L"ms" ) );
+		fake_latency_amt.setup( "", XOR( "fake_latency_amt" ), 50.f, 1000.f, false, 0, 300.f, 50.f, XOR( L"ms" ) );
 		RegisterElement( &fake_latency_amt );
 
 		// col2.
-		autoaccept.setup( XOR( "auto-accept matchmaking" ), XOR( "autoaccept" ) );
-		RegisterElement( &autoaccept, 1 );
+		auto_buy.setup(XOR("auto buy"), XOR("auto_buy"));
+		RegisterElement(&auto_buy, 1);
 
-		unlock.setup( XOR( "unlock inventory in-game" ), XOR( "unlock_inventory" ) );
-		RegisterElement( &unlock, 1 );
+		primary.setup(XOR("primary"), XOR("primary"), { XOR("off"), XOR("auto"), XOR("awp"), XOR("scout") });
+		primary.AddShowCallback(callbacks::IsAutobuyOn);
+		RegisterElement(&primary, 1);
+
+		secondary.setup(XOR("secondary"), XOR("secondary"), { XOR("off"), XOR("light pistol"), XOR("heavey pistol"), XOR("elite") });
+		secondary.AddShowCallback(callbacks::IsAutobuyOn);
+		RegisterElement(&secondary, 1);
+
+		utility.setup(XOR("utility"), XOR("utility"), { XOR("armor"), XOR("grenades"), XOR("defuse kit"), XOR("zeus x27") });
+		utility.AddShowCallback(callbacks::IsAutobuyOn);
+		RegisterElement(&utility, 1);
 
 		hitmarker.setup( XOR( "hitmarker" ), XOR( "hitmarker" ) );
-		RegisterElement( &hitmarker, 1 );
+		RegisterElement( &hitmarker, 1);
 
-		ragdoll_force.setup( XOR( "ragdoll force" ), XOR( "ragdoll_force" ) );
-		RegisterElement( &ragdoll_force, 1 );
+		hitsound.setup(XOR("hitsound"), XOR("hitsound"), { XOR("off"), XOR("arena switch press"), XOR("bell"), XOR("blip") });
+		RegisterElement(&hitsound, 1);
 
-		ranks.setup( XOR( "reveal matchmaking ranks" ), XOR( "ranks" ) );
-		RegisterElement( &ranks, 1 );
+		hitsound_volume.setup("", XOR("hitsound_volume"), 0.f, 100.f, false, 0, 100.f, 1.f, XOR(L"%"));
+		hitsound_volume.AddShowCallback(callbacks::IsHitsoundOn);
+		RegisterElement(&hitsound_volume, 1);
 
 		killfeed.setup( XOR( "preserve killfeed" ), XOR( "killfeed" ) );
 		killfeed.SetCallback( callbacks::ToggleKillfeed );
-		RegisterElement( &killfeed, 1 );
+		RegisterElement( &killfeed, 1);
 	}
 };
 
 class ConfigTab : public Tab {
 public:
 	Colorpicker menu_color;
+	MultiDropdown notifications;
 
-	Dropdown mode;
 	Dropdown config;
 	Keybind  key1;
 	Keybind  key2;
@@ -2029,8 +1852,8 @@ public:
 		menu_color.setup( XOR( "menu color" ), XOR( "menu_color" ), colors::burgundy, &g_gui.m_color );
 		RegisterElement( &menu_color );
 
-		mode.setup( XOR( "safety mode" ), XOR( "mode" ), { XOR( "matchmaking" ), XOR( "no-spread" ) } );
-		RegisterElement( &mode, 1 );
+		notifications.setup(XOR("notifications"), XOR("notifications"), { XOR("matchmaking"), XOR("damage"), XOR("purchases"), XOR("bomb"), XOR("defuse") });
+		RegisterElement(&notifications);
 
 		config.setup( XOR( "configuration" ), XOR( "cfg" ), { XOR( "1" ), XOR( "2" ), XOR( "3" ), XOR( "4" ), XOR( "5" ), XOR( "6" ) } );
 		config.RemoveFlags( ElementFlags::SAVE );
@@ -2099,7 +1922,6 @@ public:
 	VisualsTab	 visuals;
 
 	// misc.
-	MovementTab  movement;
 	SkinsTab     skins;
 	MiscTab	     misc;
 	ConfigTab	 config;
@@ -2124,9 +1946,6 @@ public:
 		visuals.init( );
 
 		// misc.
-		RegisterTab( &movement );
-		movement.init( );
-
 		RegisterTab( &skins );
 		skins.init( );
 

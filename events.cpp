@@ -9,6 +9,8 @@ void events::round_start( IGameEvent* evt ) {
 	// fix fix?
 	g_cl.m_body_pred = g_csgo.m_globals->m_curtime;
 
+	auto_buy();
+
 	// remove notices.
 	if( g_menu.main.misc.killfeed.get( ) ) {
 		KillFeed_t* feed = ( KillFeed_t* )g_csgo.m_hud->FindElement( HASH( "SFHudDeathNoticeAndBotStatus" ) );
@@ -29,22 +31,6 @@ void events::round_start( IGameEvent* evt ) {
 	g_visuals.m_opacities.fill( 0.f );
     g_visuals.m_offscreen_damage.fill( OffScreenDamageData_t() );
 
-	// buybot.
-	{
-		auto buy1 = g_menu.main.misc.buy1.GetActiveItems( );
-		auto buy2 = g_menu.main.misc.buy2.GetActiveItems( );
-		auto buy3 = g_menu.main.misc.buy3.GetActiveItems( );
-
-		for( auto it = buy1.begin( ); it != buy1.end( ); ++it )
-			g_csgo.m_engine->ExecuteClientCmd( tfm::format( XOR( "buy %s" ), *it ).data( ) );
-
-		for( auto it = buy2.begin( ); it != buy2.end( ); ++it )
-			g_csgo.m_engine->ExecuteClientCmd( tfm::format( XOR( "buy %s" ), *it ).data( ) );
-
-		for( auto it = buy3.begin( ); it != buy3.end( ); ++it )
-			g_csgo.m_engine->ExecuteClientCmd( tfm::format( XOR( "buy %s" ), *it ).data( ) );
-	}
-
 	// update all players.
 	for( int i{ 1 }; i <= g_csgo.m_globals->m_max_clients; ++i ) {
 		Player* player = g_csgo.m_entlist->GetClientEntity< Player* >( i );
@@ -57,6 +43,71 @@ void events::round_start( IGameEvent* evt ) {
 
 	// clear origins.
 	g_cl.m_net_pos.clear( );
+}
+
+void events::auto_buy() {
+	auto autos = g_cl.m_weapon_id == SCAR20 || g_cl.m_weapon_id == G3SG1;
+	auto awp = g_cl.m_weapon_id == AWP;
+	auto scout = g_cl.m_weapon_id == SSG08;
+	auto light_pistol = g_cl.m_weapon_id == TEC9 || g_cl.m_weapon_id == FIVESEVEN;
+	auto heavy_pistol = g_cl.m_weapon_id == DEAGLE || g_cl.m_weapon_id == REVOLVER;
+	auto elite = g_cl.m_weapon_id == ELITE;
+
+	auto primary = g_menu.main.misc.primary.get();
+	auto secondary = g_menu.main.misc.secondary.get();
+
+	if (g_menu.main.misc.auto_buy.get()) {
+
+		// primary
+		if (primary == 1 && !autos) {
+			g_csgo.m_engine->ExecuteClientCmd((XOR("buy scar20; buy g3sg1")));
+		}
+
+		// I know it's not really needed but hey let's keep it consistant?
+		if (primary == 2 && !awp) {
+			g_csgo.m_engine->ExecuteClientCmd((XOR("buy awp")));
+		}
+
+		// I know it's not really needed but hey let's keep it consistant?
+		if (primary == 3 && !scout) {
+			g_csgo.m_engine->ExecuteClientCmd((XOR("buy ssg08")));
+		}
+
+		// secondary
+		if (secondary == 1 && !light_pistol) {
+			g_csgo.m_engine->ExecuteClientCmd((XOR("buy tec9; buy fn57")));
+		}
+
+		// I know it's not really needed but hey let's keep it consistant?
+		if (secondary == 2 && !heavy_pistol) {
+			g_csgo.m_engine->ExecuteClientCmd((XOR("buy deagle")));
+		}
+
+		// I know it's not really needed but hey let's keep it consistant?
+		if (secondary == 3 && !elite) {
+			g_csgo.m_engine->ExecuteClientCmd((XOR("buy elite")));
+		}
+
+		// consistant? No fuck that here.
+		if (g_menu.main.misc.utility.get(0)) {
+			g_csgo.m_engine->ExecuteClientCmd(XOR("buy heavyarmor; buy vesthelm; buy vest"));
+		}
+
+		// consistant? No fuck that here.
+		if (g_menu.main.misc.utility.get(1)) {
+			g_csgo.m_engine->ExecuteClientCmd(XOR("buy hegrenade; buy molotov; buy incgrenade; buy smokegrenade"));
+		}
+
+		// consistant? No fuck that here.
+		if (g_menu.main.misc.utility.get(2)) {
+			g_csgo.m_engine->ExecuteClientCmd((XOR("buy defuser")));
+		}
+
+		// consistant? No fuck that here.
+		if (g_menu.main.misc.utility.get(2)) {
+			g_csgo.m_engine->ExecuteClientCmd((XOR("buy taser")));
+		}
+	}
 }
 
 void events::round_end( IGameEvent* evt ) {
@@ -106,7 +157,7 @@ void events::item_purchase( IGameEvent* evt ) {
 	if( !g_cl.m_local || !evt )
 		return;
 
-	if( !g_menu.main.misc.notifications.get( 2 ) )
+	if( !g_menu.main.config.notifications.get( 2 ) )
 		return;
 
 	// only log purchases of the enemy team.
@@ -141,7 +192,7 @@ void events::player_death( IGameEvent* evt ) {
 void events::player_given_c4( IGameEvent* evt ) {
 	player_info_t info;
 
-	if( !g_menu.main.misc.notifications.get( 3 ) )
+	if( !g_menu.main.config.notifications.get( 3 ) )
 		return;
 
     // get the player who received the bomb.
@@ -159,7 +210,7 @@ void events::player_given_c4( IGameEvent* evt ) {
 void events::bomb_beginplant( IGameEvent* evt ) {
 	player_info_t info;
 
-	if( !g_menu.main.misc.notifications.get( 3 ) )
+	if( !g_menu.main.config.notifications.get( 3 ) )
 		return;
 
     // get the player who played the bomb.
@@ -178,7 +229,7 @@ void events::bomb_beginplant( IGameEvent* evt ) {
 void events::bomb_abortplant( IGameEvent* evt ) {
 	player_info_t info;
 
-	if( !g_menu.main.misc.notifications.get( 3 ) )
+	if( !g_menu.main.config.notifications.get( 3 ) )
 		return;
 
 	// get the player who stopped planting the bomb.
@@ -208,7 +259,7 @@ void events::bomb_planted( IGameEvent* evt ) {
         g_visuals.m_last_bombsite = site_name;
     }
 
-	if( !g_menu.main.misc.notifications.get( 3 ) )
+	if( !g_menu.main.config.notifications.get( 3 ) )
 		return;
 
 	player_index = g_csgo.m_engine->GetPlayerForUserID( evt->m_keys->FindKey( HASH( "userid" ) )->GetInt( ) );
@@ -285,7 +336,7 @@ void events::bomb_beep( IGameEvent *evt ) {
 void events::bomb_begindefuse( IGameEvent* evt ) {
 	player_info_t info;
 
-	if( !g_menu.main.misc.notifications.get( 4 ) )
+	if( !g_menu.main.config.notifications.get( 4 ) )
 		return;
 
 	// get index of player that started defusing the bomb.
@@ -312,7 +363,7 @@ void events::bomb_begindefuse( IGameEvent* evt ) {
 void events::bomb_abortdefuse( IGameEvent* evt ) {
 	player_info_t info;
 
-	if( !g_menu.main.misc.notifications.get( 4 ) )
+	if( !g_menu.main.config.notifications.get( 4 ) )
 		return;
 
 	// get index of player that stopped defusing the bomb.

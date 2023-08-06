@@ -20,6 +20,16 @@ ulong_t __stdcall Client::init( void* arg ) {
 	return 1;
 }
 
+void Client::Clantag() {
+		auto SetClanTag = [&](std::string tag) -> void {
+		using SetClanTag_t = int(__fastcall*)(const char*, const char*);
+		static auto SetClanTagFn = pattern::find(g_csgo.m_engine_dll, XOR("53 56 57 8B DA 8B F9 FF 15")).as<SetClanTag_t>();
+
+		SetClanTagFn(tag.c_str(), XOR("supremacy"));
+	};
+		SetClanTag(XOR("supremacy"));
+}
+
 void Client::DrawHUD( ) {
 	if( !g_csgo.m_engine->IsInGame( ) )
 		return;
@@ -247,20 +257,6 @@ void Client::DoMove( ) {
 		m_weapon_fire = CanFireWeapon( );
 	}
 
-	// last tick defuse.
-	// todo - dex;  figure out the range for CPlantedC4::Use?
-	//              add indicator if valid (on ground, still have time, not being defused already, etc).
-	//              move this? not sure where we should put it.
-	if( g_input.GetKeyState( g_menu.main.misc.last_tick_defuse.get( ) ) && g_visuals.m_c4_planted ) {
-		float defuse = ( m_local->m_bHasDefuser( ) ) ? 5.f : 10.f;
-		float remaining = g_visuals.m_planted_c4_explode_time - g_csgo.m_globals->m_curtime;
-		float dt = remaining - defuse - ( g_cl.m_latency / 2.f );
-
-		m_cmd->m_buttons &= ~IN_USE;
-		if( dt <= game::TICKS_TO_TIME( 2 ) )
-			m_cmd->m_buttons |= IN_USE;
-	}
-
 	// grenade prediction.
 	g_grenades.think( );
 
@@ -278,9 +274,7 @@ void Client::EndMove( CUserCmd* cmd ) {
 	// update client-side animations.
 	UpdateInformation( );
 
-	// if matchmaking mode, anti untrust clamp.
-	if( g_menu.main.config.mode.get( ) == 0 )
-		m_cmd->m_view_angles.SanitizeAngle( );
+	m_cmd->m_view_angles.SanitizeAngle( );
 
 	// fix our movement.
 	g_movement.FixMove( cmd, m_strafe_angles );
@@ -316,11 +310,6 @@ void Client::EndMove( CUserCmd* cmd ) {
 }
 
 void Client::OnTick( CUserCmd* cmd ) {
-	// TODO; add this to the menu.
-	if( g_menu.main.misc.ranks.get( ) && cmd->m_buttons & IN_SCORE ) {
-		static CCSUsrMsg_ServerRankRevealAll msg{ };
-		g_csgo.ServerRankRevealAll( &msg );
-	}
 
 	// store some data and update prediction.
 	StartMove( cmd );
@@ -552,7 +541,7 @@ void Client::UpdateRevolverCock( ) {
 	else {
 		// we still have ticks to query.
 		// apply inattack.
-		if( g_menu.main.config.mode.get( ) == 0 && m_revolver_query > m_revolver_cock )
+		if( m_revolver_query > m_revolver_cock )
 			m_cmd->m_buttons |= IN_ATTACK;
 
 		// count cock ticks.

@@ -105,9 +105,6 @@ float Resolver::GetAwayAngle( LagRecord* record ) {
 }
 
 void Resolver::MatchShot( AimPlayer* data, LagRecord* record ) {
-	// do not attempt to do this in nospread mode.
-	if( g_menu.main.config.mode.get( ) == 1 )
-		return;
 
 	float shoot_time = -1.f;
 
@@ -162,12 +159,6 @@ void Resolver::ResolveAngles( Player* player, LagRecord* record ) {
 	// next up mark this record with a resolver mode that will be used.
 	SetMode( record );
 
-	// if we are in nospread mode, force all players pitches to down.
-	// TODO; we should check thei actual pitch and up too, since those are the other 2 possible angles.
-	// this should be somehow combined into some iteration that matches with the air angle iteration.
-	if( g_menu.main.config.mode.get( ) == 1 )
-		record->m_eye_angles.x = 90.f;
-
 	// we arrived here we can do the acutal resolve.
 	if( record->m_mode == Modes::RESOLVE_WALK ) 
 		ResolveWalk( data, record );
@@ -200,11 +191,6 @@ void Resolver::ResolveWalk( AimPlayer* data, LagRecord* record ) {
 }
 
 void Resolver::ResolveStand( AimPlayer* data, LagRecord* record ) {
-	// for no-spread call a seperate resolver.
-	if( g_menu.main.config.mode.get( ) == 1 ) {
-		StandNS( data, record );
-		return;
-	}
 
 	// get predicted away angle for the player.
 	float away = GetAwayAngle( record );
@@ -363,11 +349,6 @@ void Resolver::StandNS( AimPlayer* data, LagRecord* record ) {
 }
 
 void Resolver::ResolveAir( AimPlayer* data, LagRecord* record ) {
-	// for no-spread call a seperate resolver.
-	if( g_menu.main.config.mode.get( ) == 1 ) {
-		AirNS( data, record );
-		return;
-	}
 
 	// else run our matchmaking air resolver.
 

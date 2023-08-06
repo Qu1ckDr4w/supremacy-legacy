@@ -11,22 +11,21 @@ void HVH::IdealPitch( ) {
 }
 
 void HVH::AntiAimPitch( ) {
-	bool safe = g_menu.main.config.mode.get( ) == 0;
 	
 	switch( m_pitch ) {
 	case 1:
 		// down.
-		g_cl.m_cmd->m_view_angles.x = safe ? 89.f : 720.f;
+		g_cl.m_cmd->m_view_angles.x = 89.f;
 		break;
 
 	case 2:
 		// up.
-		g_cl.m_cmd->m_view_angles.x = safe ? -89.f : -720.f;
+		g_cl.m_cmd->m_view_angles.x = -89.f;
 		break;
 
 	case 3:
 		// random.
-		g_cl.m_cmd->m_view_angles.x = g_csgo.RandomFloat( safe ? -89.f : -720.f, safe ? 89.f : 720.f );
+		g_cl.m_cmd->m_view_angles.x = g_csgo.RandomFloat( -89.f, 89.f );
 		break;
 
 	case 4:
@@ -817,7 +816,7 @@ void HVH::SendPacket( ) {
 	}
 
 	// force fake-lag to 14 when fakelagging.
-	if( g_input.GetKeyState( g_menu.main.movement.fakewalk.get( ) ) ) {
+	if( g_input.GetKeyState( g_menu.main.misc.fakewalk.get( ) ) ) {
 		*g_cl.m_packet = false;
 	}
 

@@ -13,6 +13,7 @@ public:
 	float  m_old_yaw;
 	float  m_circle_yaw;
 	bool   m_invert;
+	int    m_tickbase;
 
 public:
 	void JumpRelated( );

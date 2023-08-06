@@ -7,6 +7,7 @@ private:
 	std::map< std::string, std::vector< game_event_t > > m_events;
 
 public:
+
 	// ctor.
 	__forceinline Listener( ) : m_events{} {
 		m_debug_id = 42;
@@ -43,6 +44,7 @@ public:
 
 namespace events {
 	void round_start( IGameEvent* evt );
+	void auto_buy();
 	void round_end( IGameEvent* evt );
 	void player_hurt( IGameEvent* evt );
 	void bullet_impact( IGameEvent* evt );
