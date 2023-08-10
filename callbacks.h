@@ -2,6 +2,7 @@
 
 namespace callbacks {
 	void SkinUpdate( );
+	void IsUnlockhiddencvarOn();
 	void ForceFullUpdate( );
 	void ToggleThirdPerson( );
 	void ToggleFakeLatency( );
@@ -43,9 +44,19 @@ namespace callbacks {
 	bool IsAirDirCustom( );
 	bool IsFakeAntiAimRelative( );
 	bool IsFakeAntiAimJitter( );
+
+	bool IsWeaponsOn();
+	bool IsGrenadesOn();
+	bool IsItemsOn();
+	bool IsNightMode();
+	bool IsTransparentPropsOn();
+	bool IsFogOn();
+	bool IsFovOn();
+	bool IsOffscreenOn();
 	
 	bool IsAutobuyOn();
 	bool IsHitsoundOn();
+	bool IsAspectratioOn();
 	
 	bool IsConfig1( );
 	bool IsConfig2( );

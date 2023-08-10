@@ -75,6 +75,11 @@ bool LagCompensation::StartPrediction( AimPlayer* data ) {
 
 	float change = 0.f, dir = 0.f;
 
+	int tickCounter = 0;
+
+	if (g_menu.main.aimbot.delay_shot.get(0)) 
+		return false;
+
 	// get the direction of the current velocity.
 	if( record->m_velocity.y != 0.f || record->m_velocity.x != 0.f )
 		dir = math::rad_to_deg( std::atan2( record->m_velocity.y, record->m_velocity.x ) );

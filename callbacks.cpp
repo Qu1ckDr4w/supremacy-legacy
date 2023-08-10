@@ -5,13 +5,11 @@ void callbacks::SkinUpdate( ) {
 	g_skins.m_update = true;
 }
 
+void callbacks::IsUnlockhiddencvarOn() {
+	g_cl.UnlockHiddenConvars();
+}
+
 void callbacks::ForceFullUpdate( ) {
-	//static DWORD tick{};
-	//
-	//if( tick != g_winapi.GetTickCount( ) ) {
-	//	g_csgo.cl_fullupdate->m_callback( );
-	//	tick = g_winapi.GetTickCount( );
-	//
 
 	g_csgo.m_cl->m_delta_tick = -1;
 }
@@ -35,45 +33,45 @@ void callbacks::SaveHotkeys( ) {
 }
 
 void callbacks::ConfigLoad1( ) {
-	g_config.load( &g_menu.main, XOR( "1.sup" ) );
+	g_config.load( &g_menu.main, XOR( "1.ls" ) );
 	g_menu.main.config.config.select( 1 - 1 );
 
 	g_notify.add( tfm::format( XOR( "loaded config 1\n" ) ) );
 }
 
 void callbacks::ConfigLoad2( ) {
-	g_config.load( &g_menu.main, XOR( "2.sup" ) );
+	g_config.load( &g_menu.main, XOR( "2.ls" ) );
 	g_menu.main.config.config.select( 2 - 1 );
 	g_notify.add( tfm::format( XOR( "loaded config 2\n" ) ) );
 }
 
 void callbacks::ConfigLoad3( ) {
-	g_config.load( &g_menu.main, XOR( "3.sup" ) );
+	g_config.load( &g_menu.main, XOR( "3.ls" ) );
 	g_menu.main.config.config.select( 3 - 1 );
 	g_notify.add( tfm::format( XOR( "loaded config 3\n" ) ) );
 }
 
 void callbacks::ConfigLoad4( ) {
-	g_config.load( &g_menu.main, XOR( "4.sup" ) );
+	g_config.load( &g_menu.main, XOR( "4.ls" ) );
 	g_menu.main.config.config.select( 4 - 1 );
 	g_notify.add( tfm::format( XOR( "loaded config 4\n" ) ) );
 }
 
 void callbacks::ConfigLoad5( ) {
-	g_config.load( &g_menu.main, XOR( "5.sup" ) );
+	g_config.load( &g_menu.main, XOR( "5.ls" ) );
 	g_menu.main.config.config.select( 5 - 1 );
 	g_notify.add( tfm::format( XOR( "loaded config 5\n" ) ) );
 }
 
 void callbacks::ConfigLoad6( ) {
-	g_config.load( &g_menu.main, XOR( "6.sup" ) );
+	g_config.load( &g_menu.main, XOR( "6.ls" ) );
 	g_menu.main.config.config.select( 6 - 1 );
 	g_notify.add( tfm::format( XOR( "loaded config 6\n" ) ) );
 }
 
 void callbacks::ConfigLoad( ) {
 	std::string config = g_menu.main.config.config.GetActiveItem( );
-	std::string file   = tfm::format( XOR( "%s.sup" ), config.data( ) );
+	std::string file   = tfm::format( XOR( "%s.ls" ), config.data( ) );
 
 	g_config.load( &g_menu.main, file );
 	g_notify.add( tfm::format( XOR( "loaded config %s\n" ), config.data( ) ) );
@@ -81,7 +79,7 @@ void callbacks::ConfigLoad( ) {
 
 void callbacks::ConfigSave( ) {
 	std::string config = g_menu.main.config.config.GetActiveItem( );
-	std::string file   = tfm::format( XOR( "%s.sup" ), config.data( ) );
+	std::string file   = tfm::format( XOR( "%s.ls" ), config.data( ) );
 
 	g_config.save( &g_menu.main, file );
 	g_notify.add( tfm::format( XOR( "saved config %s\n" ), config.data( ) ) );
@@ -191,12 +189,48 @@ bool callbacks::IsFakeAntiAimJitter( ) {
 	return g_menu.main.antiaim.fake_yaw.get( ) == 3;
 }
 
+bool callbacks::IsWeaponsOn() {
+	return g_menu.main.visuals.items.get() == 0;
+}
+
+bool callbacks::IsGrenadesOn() {
+	return g_menu.main.visuals.items.get() == 1;
+}
+
+bool callbacks::IsItemsOn() {
+	return g_menu.main.visuals.items.get() == 2;
+}
+
+bool callbacks::IsNightMode() {
+	return g_menu.main.visuals.world.get() == 1;
+}
+
+bool callbacks::IsTransparentPropsOn() {
+	return g_menu.main.visuals.transparent_props.get();
+}
+
+bool callbacks::IsOffscreenOn() {
+	return g_menu.main.visuals.indicators.get(5);
+}
+
+bool callbacks::IsFogOn() {
+	return g_menu.main.visuals.fog.get();
+}
+
+bool callbacks::IsFovOn() {
+	return g_menu.main.visuals.fov.get();
+}
+
 bool callbacks::IsAutobuyOn() {
 	return g_menu.main.misc.auto_buy.get();
 }
 
 bool callbacks::IsHitsoundOn() {
 	return g_menu.main.misc.hitsound.get() > 0;
+}
+
+bool callbacks::IsAspectratioOn() {
+	return g_menu.main.misc.aspect_ratio.get();
 }
 
 bool callbacks::IsConfig1( ) {

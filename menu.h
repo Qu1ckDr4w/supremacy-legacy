@@ -17,8 +17,11 @@ public:
 
 	// col2.
 	Dropdown      zoom;
+	MultiDropdown delay_shot;
 	Checkbox	  autostop_always_on;
+	Checkbox	  force_hitchance;
 	Slider	      hitchance_amount;
+	Dropdown	  accuracy;
 	MultiDropdown baim1;
 	MultiDropdown baim2;
 	Slider        baim_hp;
@@ -61,18 +64,27 @@ public:
 		damage_override.setup(XOR("damage override"), XOR("damage_override"));
 		RegisterElement(&damage_override);
 
-		damage_override_value.setup("", XOR("damage_override_value"), 1.f, 100.f, false, 0, 30.f, 1.f);
+		damage_override_value.setup("", XOR("damage_override_value"), 1.f, 100.f, false, 0, 1.f, 1.f);
 		RegisterElement(&damage_override_value);
 
 		// col2.
 		zoom.setup( XOR( "auto scope" ), XOR( "zoom" ), { XOR( "off" ), XOR( "always" ) } );
 		RegisterElement( &zoom, 1 );
 
-		autostop_always_on.setup(XOR("automatic stop always on"), XOR("auto_stop_always"));
+		delay_shot.setup(XOR("delay shot"), XOR("delay_shot"), { XOR("normal"), XOR("unduck"), XOR("breaking lag comp") });
+		RegisterElement(&delay_shot, 1);
+
+		autostop_always_on.setup(XOR("autostop"), XOR("auto_stop_always"));
 		RegisterElement(&autostop_always_on, 1);
 
-		hitchance_amount.setup( "", XOR( "hitchance_amount" ), 1.f, 100.f, false, 0, 50.f, 1.f, XOR( L"%" ) );
+		force_hitchance.setup(XOR("force hitchance"), XOR("force_hitchance"));
+		RegisterElement(&force_hitchance, 1);
+
+		hitchance_amount.setup( "hitchance", XOR( "hitchance_amount" ), 1.f, 100.f, true, 0, 50.f, 1.f );
 		RegisterElement( &hitchance_amount, 1 );
+
+		accuracy.setup(XOR("accuracy"), XOR("accuracy"), { XOR("off"), XOR("low"), XOR("medium"), XOR("high"), XOR("maximum") });
+		RegisterElement(&accuracy, 1);
 
 		baim1.setup( XOR( "prefer body aim" ), XOR( "baim1" ), { XOR( "always" ), XOR( "lethal" ), XOR( "lethal x2" ), XOR( "fake" ), XOR( "in air" ) } );
 		RegisterElement( &baim1, 1 );
@@ -84,7 +96,7 @@ public:
 		baim_hp.AddShowCallback( callbacks::IsBaimHealth );
 		RegisterElement( &baim_hp, 1 );
 
-		baim_key.setup( XOR( "body aim on key" ), XOR( "body aim on key" ) );
+		baim_key.setup( XOR( "body aim on key" ), XOR( "body_aim_on_key" ) );
 		RegisterElement( &baim_key, 1 );
 	}
 };
@@ -95,6 +107,7 @@ public:
 	Checkbox enable;
 	Checkbox edge;
 	Dropdown mode;
+	Slider   walk_speed;
 
 	Dropdown pitch_stand;
 	Dropdown yaw_stand;
@@ -133,6 +146,7 @@ public:
 	Dropdown body_fake_air;
 
 	// col 2.
+	Dropdown fake_target;
 	Dropdown fake_yaw;
 	Slider	 fake_relative;
 	Slider	 fake_jitter_range;
@@ -156,16 +170,19 @@ public:
 		mode.setup( "", XOR( "mode" ), { XOR( "stand" ), XOR( "walk" ), XOR( "air" ) }, false );
 		RegisterElement( &mode );
 
+		walk_speed.setup("walk speed trigger", XOR("walk_speed"), 1.f, 140.f, true, 0, 1.f, 1.f);
+		RegisterElement(&walk_speed);
+
 		// stand.
-		pitch_stand.setup( XOR( "pitch" ), XOR( "pitch_stnd" ), { XOR( "off" ), XOR( "down" ), XOR( "up" ), XOR( "random" ), XOR( "ideal" ) } );
+		pitch_stand.setup( XOR( "pitch" ), XOR( "pitch_stnd" ), { XOR( "off" ), XOR( "down" ), XOR( "up" ) } );
 		pitch_stand.AddShowCallback( callbacks::IsAntiAimModeStand );
 		RegisterElement( &pitch_stand );
 
-		yaw_stand.setup( XOR( "yaw" ), XOR( "yaw_stnd" ), { XOR( "off" ), XOR( "direction" ), XOR( "jitter" ), XOR( "rotate" ), XOR( "random" ) } );
+		yaw_stand.setup( XOR( "yaw" ), XOR( "yaw_stnd" ), { XOR( "off" ), XOR( "direction" ), XOR( "jitter" ), XOR( "rotate" ), XOR( "sway" ) } );
 		yaw_stand.AddShowCallback( callbacks::IsAntiAimModeStand );
 		RegisterElement( &yaw_stand );
 
-		jitter_range_stand.setup( "", XOR( "jitter_range_stnd" ), 1.f, 180.f, false, 0, 45.f, 5.f, XOR( L"°" ) );
+		jitter_range_stand.setup( "", XOR( "jitter_range_stnd" ), 1.f, 90.f, false, 0, 45.f, 5.f, XOR( L"°" ) );
 		jitter_range_stand.AddShowCallback( callbacks::IsAntiAimModeStand );
 		jitter_range_stand.AddShowCallback( callbacks::IsStandYawJitter );
 		RegisterElement( &jitter_range_stand );
@@ -226,7 +243,7 @@ public:
 		yaw_walk.AddShowCallback( callbacks::IsAntiAimModeWalk );
 		RegisterElement( &yaw_walk );
 
-		jitter_range_walk.setup( "", XOR( "jitter_range_walk" ), 1.f, 180.f, false, 0, 45.f, 5.f, XOR( L"°" ) );
+		jitter_range_walk.setup( "", XOR( "jitter_range_walk" ), 1.f, 90.f, false, 0, 45.f, 5.f, XOR( L"°" ) );
 		jitter_range_walk.AddShowCallback( callbacks::IsAntiAimModeWalk );
 		jitter_range_walk.AddShowCallback( callbacks::IsWalkYawJitter );
 		RegisterElement( &jitter_range_walk );
@@ -277,7 +294,7 @@ public:
 		yaw_air.AddShowCallback( callbacks::IsAntiAimModeAir );
 		RegisterElement( &yaw_air );
 
-		jitter_range_air.setup( "", XOR( "jitter_range_air" ), 1.f, 180.f, false, 0, 45.f, 5.f, XOR( L"°" ) );
+		jitter_range_air.setup( "", XOR( "jitter_range_air" ), 1.f, 90.f, false, 0, 45.f, 5.f, XOR( L"°" ) );
 		jitter_range_air.AddShowCallback( callbacks::IsAntiAimModeAir );
 		jitter_range_air.AddShowCallback( callbacks::IsAirYawJitter );
 		RegisterElement( &jitter_range_air );
@@ -325,6 +342,9 @@ public:
 		RegisterElement( &body_fake_air );
 
 		// col2.
+		fake_target.setup(XOR("fake target"), XOR("fake_target"), { XOR("opposite"), XOR("identical")});
+		RegisterElement(&fake_target, 1);
+
 		fake_yaw.setup( XOR( "fake yaw" ), XOR( "fake_yaw" ), { XOR( "off" ), XOR( "default" ), XOR( "relative" ), XOR( "jitter" ), XOR( "rotate" ), XOR( "random" ), XOR( "local view" ) } );
 		RegisterElement( &fake_yaw, 1 );
 
@@ -356,12 +376,11 @@ public:
 
 class PlayersTab : public Tab {
 public:
+	Dropdown      items;
 	MultiDropdown box;
 	Colorpicker   box_enemy;
 	Colorpicker   box_friendly;
 	Checkbox      dormant;
-	Checkbox      offscreen;
-	Colorpicker   offscreen_color;
 	MultiDropdown name;
 	Colorpicker   name_color;
 	MultiDropdown health;
@@ -403,6 +422,9 @@ public:
 	void init( ) {
 		SetTitle( XOR( "players" ) );
 
+		items.setup(XOR("items"), XOR("items"), { XOR("enemy"), XOR("friendly"), XOR("local") }, false);
+		RegisterElement(&items);
+
 		box.setup( XOR( "boxes" ), XOR( "box" ), { XOR( "enemy" ), XOR( "friendly" ) } );
 		RegisterElement( &box );
 
@@ -414,12 +436,6 @@ public:
 
 		dormant.setup( XOR( "dormant enemies" ), XOR( "dormant" ) );
 		RegisterElement( &dormant );
-
-		offscreen.setup( XOR( "enemy offscreen esp" ), XOR( "offscreen" ) );
-		RegisterElement( &offscreen );
-
-		offscreen_color.setup( XOR( "offscreen esp color" ), XOR( "offscreen_color" ), colors::white );
-		RegisterElement( &offscreen_color );
 
 		name.setup( XOR( "name" ), XOR( "name" ), { XOR( "enemy" ), XOR( "friendly" ) } );
 		RegisterElement( &name );
@@ -525,17 +541,28 @@ public:
 
 class VisualsTab : public Tab {
 public:
-	Checkbox      items;
+	Dropdown      items;
+	Checkbox      weapons;
 	Checkbox      ammo;
-	Colorpicker   item_color;
+	Colorpicker   weapons_color;
+	Colorpicker   ammo_color;
 	Checkbox      proj;
 	Colorpicker   proj_color;
 	MultiDropdown proj_range;
 	Colorpicker   proj_range_color;
+	Checkbox      tracers;
 	MultiDropdown planted_c4;
 	Checkbox      disableteam;
+	Dropdown	  skybox;
 	Dropdown	  world;
+	Slider        night_amount;
+	Checkbox	  fog;
+	Colorpicker	  fog_color;
+	Slider		  fog_start;
+	Slider		  fog_end;
+	Slider		  fog_density;
 	Checkbox      transparent_props;
+	Slider        transparent_props_amount;
 
 	// col2.
 	Checkbox      fov;
@@ -543,110 +570,144 @@ public:
 	Checkbox      fov_scoped;
 	Checkbox      viewmodel_fov;
 	Slider        viewmodel_fov_amt;
-	Checkbox      spectators;
-	Checkbox      spread_xhair;
-	Colorpicker   spread_xhair_col;
-	Slider        spread_xhair_blend;
-	Checkbox      pen_crosshair;
 	MultiDropdown indicators;
-	Checkbox      tracers;
-	Checkbox      impact_beams;
-	Colorpicker   impact_beams_color;
-	Colorpicker   impact_beams_hurt_color;
-	Slider        impact_beams_time;
+	Slider        offscreen_size;
+	Colorpicker   offscreen_color;
 	Keybind       thirdperson;
+	Slider		  thirdperson_amount;
 
 public:
 	void init( ) {
 		SetTitle( XOR( "visuals" ) );
 
-		items.setup( XOR( "dropped weapons" ), XOR( "items" ) );
-		RegisterElement( &items );
+		items.setup(XOR("items"), XOR("items"), { XOR("weapons"), XOR("grenades"), XOR("items")}, false);
+		RegisterElement(&items);
+
+		weapons.setup( XOR( "dropped weapons" ), XOR( "weapons" ) );
+		weapons.AddShowCallback(callbacks::IsWeaponsOn);
+		RegisterElement( &weapons);
 
 		ammo.setup( XOR( "dropped weapons ammo" ), XOR( "ammo" ) );
+		ammo.AddShowCallback(callbacks::IsWeaponsOn);
 		RegisterElement( &ammo );
 
-		item_color.setup( XOR( "color" ), XOR( "item_color" ), colors::white );
-		RegisterElement( &item_color );
+		weapons_color.setup( XOR( "weapons color" ), XOR( "weapons_color" ), colors::white );
+		weapons_color.AddShowCallback(callbacks::IsWeaponsOn);
+		RegisterElement( &weapons_color);
 
-		proj.setup( XOR( "projectiles" ), XOR( "proj" ) );
+		ammo_color.setup(XOR("ammo color"), XOR("ammo_color"), colors::white);
+		ammo_color.AddShowCallback(callbacks::IsWeaponsOn);
+		RegisterElement(&ammo_color);
+
+		proj.setup( XOR( "grenades" ), XOR( "proj" ) );
+		proj.AddShowCallback(callbacks::IsGrenadesOn);
 		RegisterElement( &proj );
 
 		proj_color.setup( XOR( "color" ), XOR( "proj_color" ), colors::white );
+		proj_color.AddShowCallback(callbacks::IsGrenadesOn);
 		RegisterElement( &proj_color );
 
 		proj_range.setup( XOR( "projectile range" ), XOR( "proj_range" ), { XOR( "frag" ), XOR( "molly" ) } );
+		proj_range.AddShowCallback(callbacks::IsGrenadesOn);
 		RegisterElement( &proj_range );
 
 		proj_range_color.setup( XOR( "color" ), XOR( "proj_range_color" ), colors::burgundy );
+		proj_range_color.AddShowCallback(callbacks::IsGrenadesOn);
 		RegisterElement( &proj_range_color );
 
+		tracers.setup(XOR("grenade simulation"), XOR("tracers"));
+		tracers.AddShowCallback(callbacks::IsGrenadesOn);
+		RegisterElement(&tracers);
+
 		planted_c4.setup( XOR( "planted c4" ), XOR( "planted_c4" ), { XOR( "on screen (2D)" ), XOR( "on bomb (3D)" ) } );
+		planted_c4.AddShowCallback(callbacks::IsItemsOn);
 		RegisterElement( &planted_c4 );
 
 		disableteam.setup( XOR( "do not render teammates" ), XOR( "disableteam" ) );
+		disableteam.AddShowCallback(callbacks::IsItemsOn);
 		RegisterElement( &disableteam );
 
 		world.setup( XOR( "world" ), XOR( "world" ), { XOR( "off" ), XOR( "night" ), XOR( "fullbright" ) } );
 		world.SetCallback( Visuals::ModulateWorld );
 		RegisterElement( &world );
 
+		night_amount.setup("", XOR("night_amount"), 0.f, 100.f, false, 0, 1.f, 1.f);
+		night_amount.SetCallback(Visuals::ModulateWorld);
+		night_amount.AddShowCallback(callbacks::IsNightMode);
+		RegisterElement(&night_amount);
+
+		skybox.setup(XOR("skyboxes"), XOR("skybox"), { XOR("off"), XOR("tibet"),XOR("embassy"),XOR("italy"),XOR("daylight"),XOR("cloudy"),XOR("night"),XOR("night 2"),XOR("night flat"),XOR("day hd"),XOR("day"),XOR("rural"),XOR("vertigo hd"),XOR("vertigo blue hd"),XOR("vertigo"),XOR("vietnam"),XOR("dusty sky"),XOR("jungle"),XOR("nuke"),XOR("office") });
+		skybox.SetCallback(Visuals::ModulateWorld);
+		RegisterElement(&skybox);
+
+		fog.setup(XOR("fog"), XOR("fog"));
+		skybox.SetCallback(Visuals::ModulateWorld);
+		RegisterElement(&fog);
+
+		fog_color.setup("color", XOR("fog_color"), colors::burgundy);
+		fog_color.SetCallback(Visuals::ModulateWorld);
+		fog_color.AddShowCallback(callbacks::IsFogOn);
+		RegisterElement(&fog_color);
+
+		fog_start.setup(XOR("start"), XOR("fog_start"), 0.f, 2500.f, true, 0, 100.f, 1.f);
+		fog_start.SetCallback(Visuals::ModulateWorld);
+		fog_start.AddShowCallback(callbacks::IsFogOn);
+		RegisterElement(&fog_start);
+
+		fog_end.setup(XOR("end"), XOR("fog_end"), 0.f, 2500.f, true, 0, 100.f, 1.f);
+		fog_end.SetCallback(Visuals::ModulateWorld);
+		fog_end.AddShowCallback(callbacks::IsFogOn);
+		RegisterElement(&fog_end);
+
+		fog_density.setup(XOR("density"), XOR("fog_density"), 0.f, 100.f, true, 0, 100.f, 1.f);
+		fog_density.SetCallback(Visuals::ModulateWorld);
+		fog_density.AddShowCallback(callbacks::IsFogOn);
+		RegisterElement(&fog_density);
+
 		transparent_props.setup( XOR( "transparent props" ), XOR( "transparent_props" ) );
 		transparent_props.SetCallback( Visuals::ModulateWorld );
 		RegisterElement( &transparent_props );
+
+		transparent_props_amount.setup("", XOR("transparent_props_amount"), 0.f, 100.f, false, 0, 1.f, 1.f);
+		transparent_props_amount.SetCallback(Visuals::ModulateWorld);
+		transparent_props_amount.AddShowCallback(callbacks::IsTransparentPropsOn);
+		RegisterElement(&transparent_props_amount);
 
 		// col2.
 		fov.setup( XOR( "override fov" ), XOR( "fov" ) );
 		RegisterElement( &fov, 1 );
 
-		fov_amt.setup( "", XOR( "fov_amt" ), 60.f, 140.f, false, 0, 90.f, 1.f, XOR( L"°" ) );
+		fov_amt.setup( "", XOR( "fov_amt" ), 60.f, 140.f, false, 0, 90.f, 1.f );
+		fov_amt.AddShowCallback(callbacks::IsFovOn);
 		RegisterElement( &fov_amt, 1 );
 
 		fov_scoped.setup( XOR( "override fov when scoped" ), XOR( "fov_scoped" ) );
+		fov_scoped.AddShowCallback(callbacks::IsFovOn);
 		RegisterElement( &fov_scoped, 1 );
 
 		viewmodel_fov.setup( XOR( "override viewmodel fov" ), XOR( "viewmodel_fov" ) );
 		RegisterElement( &viewmodel_fov, 1 );
 
-		viewmodel_fov_amt.setup( "", XOR( "viewmodel_fov_amt" ), 60.f, 140.f, false, 0, 90.f, 1.f, XOR( L"°" ) );
+		viewmodel_fov_amt.setup( "", XOR( "viewmodel_fov_amt" ), 60.f, 140.f, false, 0, 90.f, 1.f );
 		RegisterElement( &viewmodel_fov_amt, 1 );
 
-		spectators.setup( XOR( "show spectator list" ), XOR( "spectators" ) );
-		RegisterElement( &spectators, 1 );
-
-		spread_xhair.setup( XOR( "visualize spread" ), XOR( "spread_xhair" ) );
-		RegisterElement( &spread_xhair, 1 );
-
-		spread_xhair_col.setup( XOR( "visualize spread color" ), XOR( "spread_xhair_col" ), colors::burgundy );
-		RegisterElement( &spread_xhair_col, 1 );
-
-		spread_xhair_blend.setup( "", XOR( "spread_xhair_blend" ), 10.f, 100.f, false, 0, 100.f, 1.f, XOR( L"%" ) );
-		RegisterElement( &spread_xhair_blend, 1 );
-
-		pen_crosshair.setup( XOR( "penetration crosshair" ), XOR( "pen_xhair" ) );
-		RegisterElement( &pen_crosshair, 1 );
-
-		indicators.setup( XOR( "indicators" ), XOR( "indicators" ), { XOR( "lby" ), XOR( "lag compensation" ), XOR("fake latency") } );
+		indicators.setup( XOR( "indicators" ), XOR( "indicators" ), { XOR( "lby" ), XOR( "lag compensation" ), XOR("fake latency"), XOR("spectators"), XOR("penetration"), XOR("off-screen") } );
 		RegisterElement( &indicators, 1 );
 
-		tracers.setup( XOR( "grenade simulation" ), XOR( "tracers" ) );
-		RegisterElement( &tracers, 1 );
+		offscreen_size.setup(XOR("offscreen_size"), XOR("offscreen_size"), 5.f, 35.f, true, 0, 20.f, 1.f);
+		offscreen_size.AddShowCallback(callbacks::IsOffscreenOn);
+		RegisterElement(&offscreen_size, 1);
 
-		impact_beams.setup( XOR( "impact beams" ), XOR( "impact_beams" ) );
-		RegisterElement( &impact_beams, 1 );
-
-		impact_beams_color.setup( XOR( "impact beams color" ), XOR( "impact_beams_color" ), colors::light_blue );
-		RegisterElement( &impact_beams_color, 1 );
-
-		impact_beams_hurt_color.setup( XOR( "impact beams hurt color" ), XOR( "impact_beams_hurt_color" ), colors::red );
-		RegisterElement( &impact_beams_hurt_color, 1 );
-
-		impact_beams_time.setup( XOR( "impact beams time" ), XOR( "impact_beams_time" ), 1.f, 10.f, true, 0, 1.f, 1.f, XOR( L"s" ) );
-		RegisterElement( &impact_beams_time, 1 );
+		offscreen_color.setup(XOR("off-screen color"), XOR("offscreen_color"), colors::white);
+		offscreen_color.AddShowCallback(callbacks::IsOffscreenOn);
+		RegisterElement(&offscreen_color, 1);
 
 		thirdperson.setup( XOR( "thirdperson" ), XOR( "thirdperson" ) );
 		thirdperson.SetToggleCallback( callbacks::ToggleThirdPerson );
 		RegisterElement( &thirdperson, 1 );
+
+		thirdperson_amount.setup(XOR(" "), XOR("thirdperson_amount"), 50.f, 300.f, false, 0, 100.f, 1.f);
+		RegisterElement(&thirdperson_amount, 1);
 	}
 };
 
@@ -1713,7 +1774,7 @@ public:
 		stattrak_butterfly.AddShowCallback( callbacks::KNIFE_BUTTERFLY );
 		RegisterElement( &stattrak_butterfly );
 
-		quality_butterfly.setup( XOR( "quality" ), XOR( "quality_butterfly" ), 1.f, 100.f, true, 0, 100.f, 1.f, XOR( L"%" ) );
+		quality_butterfly.setup( XOR( "quality" ), XOR( "quality_butterfly" ), 1.f, 100.f, true, 0, 100.f, 1.f );
 		quality_butterfly.SetCallback( callbacks::SkinUpdate );
 		quality_butterfly.AddShowCallback( callbacks::KNIFE_BUTTERFLY );
 		RegisterElement( &quality_butterfly );
@@ -1733,7 +1794,7 @@ public:
 		stattrak_daggers.AddShowCallback( callbacks::KNIFE_SHADOW_DAGGERS );
 		RegisterElement( &stattrak_daggers );
 
-		quality_daggers.setup( XOR( "quality" ), XOR( "quality_daggers" ), 1.f, 100.f, true, 0, 100.f, 1.f, XOR( L"%" ) );
+		quality_daggers.setup( XOR( "quality" ), XOR( "quality_daggers" ), 1.f, 100.f, true, 0, 100.f, 1.f );
 		quality_daggers.SetCallback( callbacks::SkinUpdate );
 		quality_daggers.AddShowCallback( callbacks::KNIFE_SHADOW_DAGGERS );
 		RegisterElement( &quality_daggers );
@@ -1763,6 +1824,7 @@ public:
 	// col1.
 	Checkbox      airduck;
 	Keybind		  autopeek;
+	Colorpicker	  autopeek_color;
 	Keybind		  fakewalk;
 	Keybind       fake_latency;
 	Slider		  fake_latency_amt;
@@ -1776,6 +1838,8 @@ public:
 	Dropdown	  hitsound;
 	Slider		  hitsound_volume;
 	Checkbox	  killfeed;
+	Checkbox	  aspect_ratio;
+	Slider		  aspect_ratio_amount;
 
 public:
 	void init( ) {
@@ -1787,6 +1851,9 @@ public:
 		autopeek.setup(XOR("automatic peek"), XOR("autopeek"));
 		RegisterElement(&autopeek);
 
+		autopeek_color.setup(XOR("autopeek color"), XOR("autopeek_color"), colors::burgundy, &g_gui.m_color);
+		RegisterElement(&autopeek_color);
+
 		fakewalk.setup(XOR("fake-walk"), XOR("fakewalk"));
 		RegisterElement(&fakewalk);
 
@@ -1794,7 +1861,7 @@ public:
 		fake_latency.SetToggleCallback( callbacks::ToggleFakeLatency );
 		RegisterElement( &fake_latency );
 
-		fake_latency_amt.setup( "", XOR( "fake_latency_amt" ), 50.f, 1000.f, false, 0, 300.f, 50.f, XOR( L"ms" ) );
+		fake_latency_amt.setup( "", XOR( "fake_latency_amt" ), 50.f, 1000.f, false, 0, 300.f, 50.f );
 		RegisterElement( &fake_latency_amt );
 
 		// col2.
@@ -1819,13 +1886,20 @@ public:
 		hitsound.setup(XOR("hitsound"), XOR("hitsound"), { XOR("off"), XOR("arena switch press"), XOR("bell"), XOR("blip") });
 		RegisterElement(&hitsound, 1);
 
-		hitsound_volume.setup("", XOR("hitsound_volume"), 0.f, 100.f, false, 0, 100.f, 1.f, XOR(L"%"));
+		hitsound_volume.setup("", XOR("hitsound_volume"), 0.f, 100.f, false, 0, 100.f, 1.f);
 		hitsound_volume.AddShowCallback(callbacks::IsHitsoundOn);
 		RegisterElement(&hitsound_volume, 1);
 
 		killfeed.setup( XOR( "preserve killfeed" ), XOR( "killfeed" ) );
 		killfeed.SetCallback( callbacks::ToggleKillfeed );
 		RegisterElement( &killfeed, 1);
+
+		aspect_ratio.setup(XOR("aspect ratio"), XOR("aspect_ratio"));
+		RegisterElement(&aspect_ratio, 1);
+
+		aspect_ratio_amount.setup(XOR(""), XOR("aspect_ratio_amount"), 0.0f, 2, false, 1, 1.8f, 0.1f);
+		aspect_ratio_amount.AddShowCallback(callbacks::IsAspectratioOn);
+		RegisterElement(&aspect_ratio_amount, 1);
 	}
 };
 
@@ -1833,6 +1907,8 @@ class ConfigTab : public Tab {
 public:
 	Colorpicker menu_color;
 	MultiDropdown notifications;
+	Button   unlockhiddencars;
+	Button   forceupdate;
 
 	Dropdown config;
 	Keybind  key1;
@@ -1854,6 +1930,14 @@ public:
 
 		notifications.setup(XOR("notifications"), XOR("notifications"), { XOR("matchmaking"), XOR("damage"), XOR("purchases"), XOR("bomb"), XOR("defuse") });
 		RegisterElement(&notifications);
+
+		unlockhiddencars.setup(XOR("unlock hidden cvars"));
+		unlockhiddencars.SetCallback(callbacks::IsUnlockhiddencvarOn);
+		RegisterElement(&unlockhiddencars);
+
+		forceupdate.setup(XOR("force full update"));
+		forceupdate.SetCallback(callbacks::ForceFullUpdate);
+		RegisterElement(&forceupdate);
 
 		config.setup( XOR( "configuration" ), XOR( "cfg" ), { XOR( "1" ), XOR( "2" ), XOR( "3" ), XOR( "4" ), XOR( "5" ), XOR( "6" ) } );
 		config.RemoveFlags( ElementFlags::SAVE );

@@ -72,8 +72,6 @@ void Hooks::FrameStageNotify( Stage_t stage ) {
 		// apply local player animation fix.
 		g_cl.UpdateAnimations( );
 
-        // draw our custom beams.
-        g_visuals.DrawBeams( );
 	}
 
 	// call og.

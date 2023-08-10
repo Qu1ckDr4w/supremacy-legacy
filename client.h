@@ -30,6 +30,7 @@ public:
 	void EndMove( CUserCmd* cmd );
 	void BackupPlayers( bool restore );
 	void DoMove( );
+	void UnlockHiddenConvars();
 	void Clantag();
 	void DrawHUD( );
 	void UpdateInformation( );
@@ -99,6 +100,7 @@ public:
 	CUserCmd* m_cmd;
 	int	      m_tick;
 	int	      m_buttons;
+	bool	  m_pressing_move;
 	int       m_old_buttons;
 	ang_t     m_view_angles;
 	ang_t	  m_strafe_angles;

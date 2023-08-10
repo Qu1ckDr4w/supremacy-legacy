@@ -58,11 +58,6 @@ void Shots::OnImpact( IGameEvent *evt ) {
 	// get prediction time at this point.
 	time = game::TICKS_TO_TIME( g_cl.m_local->m_nTickBase( ) );
 
-	// add to visual impacts if we have features that rely on it enabled.
-	// todo - dex; need to match shots for this to have proper GetShootPosition, don't really care to do it anymore.
-	if ( g_menu.main.visuals.impact_beams.get( ) )
-		m_vis_impacts.push_back( { pos, g_cl.m_local->GetShootPosition( ), g_cl.m_local->m_nTickBase( ) } );
-
 	// we did not take a shot yet.
 	if ( m_shots.empty( ) )
 		return;

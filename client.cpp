@@ -20,14 +20,26 @@ ulong_t __stdcall Client::init( void* arg ) {
 	return 1;
 }
 
+void Client::UnlockHiddenConvars()
+{
+	if (!g_csgo.m_cvar)
+		return;
+
+	auto p = **reinterpret_cast<ConVar***>(g_csgo.m_cvar + 0x34);
+	for (auto c = p->m_next; c != nullptr; c = c->m_next) {
+		c->m_flags &= ~FCVAR_DEVELOPMENTONLY;
+		c->m_flags &= ~FCVAR_HIDDEN;
+	}
+}
+
 void Client::Clantag() {
 		auto SetClanTag = [&](std::string tag) -> void {
 		using SetClanTag_t = int(__fastcall*)(const char*, const char*);
 		static auto SetClanTagFn = pattern::find(g_csgo.m_engine_dll, XOR("53 56 57 8B DA 8B F9 FF 15")).as<SetClanTag_t>();
 
-		SetClanTagFn(tag.c_str(), XOR("supremacy"));
+		SetClanTagFn(tag.c_str(), XOR("ls"));
 	};
-		SetClanTag(XOR("supremacy"));
+		SetClanTag(XOR("ls"));
 }
 
 void Client::DrawHUD( ) {
@@ -45,7 +57,7 @@ void Client::DrawHUD( ) {
 	// get tickrate.
 	int rate = ( int ) std::round( 1.f / g_csgo.m_globals->m_interval );
 
-	std::string text = tfm::format( XOR( "supremacy | rtt: %ims | rate: %i | %s" ), ms, rate, time.str( ).data( ) );
+	std::string text = tfm::format( XOR( "ls | rtt: %ims | rate: %i | %s" ), ms, rate, time.str( ).data( ) );
 	render::FontSize_t size = render::hud.size( text );
 
 	// background.
@@ -130,6 +142,7 @@ void Client::StartMove( CUserCmd* cmd ) {
 	m_tick = cmd->m_tick;
 	m_view_angles = cmd->m_view_angles;
 	m_buttons = cmd->m_buttons;
+	m_pressing_move = (m_buttons & (IN_LEFT) || m_buttons & (IN_FORWARD) || m_buttons & (IN_BACK) || m_buttons & (IN_RIGHT) || m_buttons & (IN_MOVELEFT) || m_buttons & (IN_MOVERIGHT) || m_buttons & (IN_JUMP));
 
 	// get local ptr.
 	m_local = g_csgo.m_entlist->GetClientEntity< Player* >( g_csgo.m_engine->GetLocalPlayer( ) );
@@ -460,7 +473,7 @@ void Client::print( const std::string text, ... ) {
 	va_end( list );
 
 	// print to console.
-	g_csgo.m_cvar->ConsoleColorPrintf( colors::burgundy, XOR( "[supremacy] " ) );
+	g_csgo.m_cvar->ConsoleColorPrintf( colors::burgundy, XOR( "[ls] " ) );
 	g_csgo.m_cvar->ConsoleColorPrintf( colors::white, buf.c_str( ) );
 }
 

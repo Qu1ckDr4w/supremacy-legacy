@@ -286,109 +286,162 @@ void AimPlayer::OnRoundStart( Player *player ) {
 	// IMPORTANT: DO NOT CLEAR LAST HIT SHIT.
 }
 
-void AimPlayer::SetupHitboxes( LagRecord *record ) {
-	// reset hitboxes.
-	m_hitboxes.clear( );
+void AimPlayer::SetupHitboxes(LagRecord* record) {
 
-	if ( g_cl.m_weapon_id == ZEUS ) {
-		// hitboxes for the zeus.
-		m_hitboxes.push_back( { HITBOX_BODY, HitscanMode::PREFER } );
+	m_hitboxes.clear();
+
+	const auto AddHitbox = [this](int index, HitscanMode mode) {
+		m_hitboxes.push_back({ index, mode });
+	};
+
+	const int Hitboxes[] = {
+	HITBOX_THORAX,
+	HITBOX_CHEST,
+	HITBOX_UPPER_CHEST,
+	HITBOX_BODY,
+	HITBOX_PELVIS
+	};
+
+	auto zeus = g_cl.m_weapon_id == ZEUS;
+	auto baim1 = g_menu.main.aimbot.baim1.GetActiveIndices();
+	auto baim2 = g_menu.main.aimbot.baim2.GetActiveIndices();
+	auto baim_key = g_input.GetKeyState(g_menu.main.aimbot.baim_key.get());
+
+	if (zeus) {
+		for (int hitbox : Hitboxes) {
+			AddHitbox(hitbox, HitscanMode::PREFER);
+		}
 		return;
 	}
 
-	// prefer, always.
-	if ( g_menu.main.aimbot.baim1.get( 0 ) )
-		m_hitboxes.push_back( { HITBOX_BODY, HitscanMode::PREFER } );
+	for (size_t i = 0; i < baim1.size(); ++i) {
+		int value = baim1[i];
 
-	// prefer, lethal.
-	if ( g_menu.main.aimbot.baim1.get( 1 ) )
-		m_hitboxes.push_back( { HITBOX_BODY, HitscanMode::LETHAL } );
+		if (i == 0) {
+			for (int hitbox : Hitboxes) {
+				AddHitbox(hitbox, HitscanMode::PREFER);
+			}
+			return;
+		}
 
-	// prefer, lethal x2.
-	if ( g_menu.main.aimbot.baim1.get( 2 ) )
-		m_hitboxes.push_back( { HITBOX_BODY, HitscanMode::LETHAL2 } );
+		if (i == 1) {
+			for (int hitbox : Hitboxes) {
+				AddHitbox(hitbox, HitscanMode::LETHAL);
+			}
+			return;
+		}
 
-	// prefer, fake.
-	if ( g_menu.main.aimbot.baim1.get( 3 ) && record->m_mode != Resolver::Modes::RESOLVE_NONE && record->m_mode != Resolver::Modes::RESOLVE_WALK )
-		m_hitboxes.push_back( { HITBOX_BODY, HitscanMode::PREFER } );
+		if (i == 2) {
+			for (int hitbox : Hitboxes) {
+				AddHitbox(hitbox, HitscanMode::LETHAL2);
+			}
+			return;
+		}
 
-	// prefer, in air.
-	if ( g_menu.main.aimbot.baim1.get( 4 ) && !( record->m_pred_flags & FL_ONGROUND ) )
-		m_hitboxes.push_back( { HITBOX_BODY, HitscanMode::PREFER } );
+		if (i == 3) {
+			for (int hitbox : Hitboxes) {
+				AddHitbox(hitbox, HitscanMode::PREFER);
+			}
+			return;
+		}
+
+		if (i == 4) {
+			for (int hitbox : Hitboxes) {
+				AddHitbox(hitbox, HitscanMode::PREFER);
+			}
+			return;
+		}
+	}
 
 	bool only{ false };
 
-	// only, always.
-	if ( g_menu.main.aimbot.baim2.get( 0 ) ) {
-		only = true;
-		m_hitboxes.push_back( { HITBOX_BODY, HitscanMode::PREFER } );
+	for (size_t o = 0; o < baim2.size(); ++o) {
+		int value = baim2[o];
+
+		if (o == 0) {
+			only = true;
+			for (int hitbox : Hitboxes) {
+				AddHitbox(hitbox, HitscanMode::PREFER);
+			}
+			return;
+		}
+
+		if (o == 1) {
+			only = true;
+			for (int hitbox : Hitboxes) {
+				AddHitbox(hitbox, HitscanMode::PREFER);
+			}
+			return;
+		}
+
+		if (o == 2) {
+			only = true;
+			for (int hitbox : Hitboxes) {
+				AddHitbox(hitbox, HitscanMode::PREFER);
+			}
+			return;
+		}
+
+		if (o == 3) {
+			only = true;
+			for (int hitbox : Hitboxes) {
+				AddHitbox(hitbox, HitscanMode::PREFER);
+			}
+			return;
+		}
+		if (only)
+			return;
 	}
 
-	// only, health.
-	if ( g_menu.main.aimbot.baim2.get( 1 ) && m_player->m_iHealth( ) <= ( int )g_menu.main.aimbot.baim_hp.get( ) ) {
+	if (baim_key) {
 		only = true;
-		m_hitboxes.push_back( { HITBOX_BODY, HitscanMode::PREFER } );
+		for (int hitbox : Hitboxes) {
+			AddHitbox(hitbox, HitscanMode::PREFER);
+		}
+		return;
 	}
 
-	// only, fake.
-	if ( g_menu.main.aimbot.baim2.get( 2 ) && record->m_mode != Resolver::Modes::RESOLVE_NONE && record->m_mode != Resolver::Modes::RESOLVE_WALK ) {
-		only = true;
-		m_hitboxes.push_back( { HITBOX_BODY, HitscanMode::PREFER } );
-	}
-
-	// only, in air.
-	if ( g_menu.main.aimbot.baim2.get( 3 ) && !( record->m_pred_flags & FL_ONGROUND ) ) {
-		only = true;
-		m_hitboxes.push_back( { HITBOX_BODY, HitscanMode::PREFER } );
-	}
-
-	// only, on key.
-	if ( g_input.GetKeyState( g_menu.main.aimbot.baim_key.get( ) ) ) {
-		only = true;
-		m_hitboxes.push_back( { HITBOX_BODY, HitscanMode::PREFER } );
-	}
-
-	// only baim conditions have been met.
-	// do not insert more hitboxes.
-	if ( only )
+	if (only)
 		return;
 
-	std::vector< size_t > hitbox{ g_menu.main.aimbot.hitbox.GetActiveIndices( ) };
-	if ( hitbox.empty( ) )
+	std::vector< size_t > hitbox{ g_menu.main.aimbot.hitbox.GetActiveIndices() };
+	if (hitbox.empty())
 		return;
 
-	for ( const auto &h : hitbox ) {
+	for (const auto& h : hitbox) {
 		// head.
-		if ( h == 0 )
-			m_hitboxes.push_back( { HITBOX_HEAD, HitscanMode::NORMAL } );
+		if (h == 0) {
+			m_hitboxes.push_back({ HITBOX_HEAD, HitscanMode::NORMAL });
+			m_hitboxes.push_back({ HITBOX_NECK, HitscanMode::NORMAL });
+		}
 
 		// chest.
-		if ( h == 1 ) {
-			m_hitboxes.push_back( { HITBOX_THORAX, HitscanMode::NORMAL } );
-			m_hitboxes.push_back( { HITBOX_CHEST, HitscanMode::NORMAL } );
-			m_hitboxes.push_back( { HITBOX_UPPER_CHEST, HitscanMode::NORMAL } );
+		if (h == 1) {
+			m_hitboxes.push_back({ HITBOX_THORAX, HitscanMode::NORMAL });
+			m_hitboxes.push_back({ HITBOX_CHEST, HitscanMode::NORMAL });
+			m_hitboxes.push_back({ HITBOX_UPPER_CHEST, HitscanMode::NORMAL });
 		}
 
 		// stomach.
-		if ( h == 2 ) {
-			m_hitboxes.push_back( { HITBOX_PELVIS, HitscanMode::NORMAL } );
-			m_hitboxes.push_back( { HITBOX_BODY, HitscanMode::NORMAL } );
+		if (h == 2) {
+			m_hitboxes.push_back({ HITBOX_PELVIS, HitscanMode::NORMAL });
+			m_hitboxes.push_back({ HITBOX_BODY, HitscanMode::NORMAL });
 		}
 
 		// arms.
-		if ( h == 3 ) {
-			m_hitboxes.push_back( { HITBOX_L_UPPER_ARM, HitscanMode::NORMAL } );
-			m_hitboxes.push_back( { HITBOX_R_UPPER_ARM, HitscanMode::NORMAL } );
+		if (h == 3) {
+			m_hitboxes.push_back({ HITBOX_L_UPPER_ARM, HitscanMode::NORMAL });
+			m_hitboxes.push_back({ HITBOX_R_UPPER_ARM, HitscanMode::NORMAL });
 		}
 
 		// legs.
-		if ( h == 4 ) {
-			m_hitboxes.push_back( { HITBOX_L_THIGH, HitscanMode::NORMAL } );
-			m_hitboxes.push_back( { HITBOX_R_THIGH, HitscanMode::NORMAL } );
-			m_hitboxes.push_back( { HITBOX_L_CALF, HitscanMode::NORMAL } );
-			m_hitboxes.push_back( { HITBOX_R_CALF, HitscanMode::NORMAL } );
-			m_hitboxes.push_back( { HITBOX_L_FOOT, HitscanMode::NORMAL } );
-			m_hitboxes.push_back( { HITBOX_R_FOOT, HitscanMode::NORMAL } );
+		if (h == 4) {
+			m_hitboxes.push_back({ HITBOX_L_THIGH, HitscanMode::NORMAL });
+			m_hitboxes.push_back({ HITBOX_R_THIGH, HitscanMode::NORMAL });
+			m_hitboxes.push_back({ HITBOX_L_CALF, HitscanMode::NORMAL });
+			m_hitboxes.push_back({ HITBOX_R_CALF, HitscanMode::NORMAL });
+			m_hitboxes.push_back({ HITBOX_L_FOOT, HitscanMode::NORMAL });
+			m_hitboxes.push_back({ HITBOX_R_FOOT, HitscanMode::NORMAL });
 		}
 	}
 }
@@ -534,6 +587,11 @@ void Aimbot::find( ) {
 		// player did not break lagcomp.
 		// history aim is possible at this point.
 		else {
+			if (g_menu.main.aimbot.delay_shot.get(2)) {
+				if (t->m_records.front().get()->m_broke_lc)
+					continue;
+			}
+
 			LagRecord *ideal = g_resolver.FindIdealRecord( t );
 			if ( !ideal )
 				continue;
@@ -606,12 +664,27 @@ void Aimbot::find( ) {
 	}
 }
 
+float AccuracyBoost()
+{
+	auto boost = g_menu.main.aimbot.accuracy.get();
+	if (boost == 1)
+		return 0.3f;
+	else if (boost == 2)
+		return 0.6f;
+	else if (boost == 3)
+		return 0.8f;
+	else if (boost == 4)
+		return 1.0f;
+	else
+		return 0.f;
+}
+
 bool Aimbot::CheckHitchance( Player *player, const ang_t &angle ) {
 	constexpr float HITCHANCE_MAX = 100.f;
 	constexpr int   SEED_MAX = 255;
 
 	vec3_t     start{ g_cl.m_shoot_pos }, end, fwd, right, up, dir, wep_spread;
-	float      inaccuracy, spread, friction;
+	float      inaccuracy, spread, friction, accuracy;
 	CGameTrace tr;
 	size_t     total_hits{ }, needed_hits{ ( size_t )std::ceil( ( g_menu.main.aimbot.hitchance_amount.get( ) * SEED_MAX ) / HITCHANCE_MAX ) };
 
@@ -622,6 +695,7 @@ bool Aimbot::CheckHitchance( Player *player, const ang_t &angle ) {
 	inaccuracy = g_cl.m_weapon->GetInaccuracy( );
 	spread = g_cl.m_weapon->GetSpread( );
 	friction = g_csgo.sv_friction->GetFloat() * g_cl.m_local->m_surfaceFriction();
+	accuracy = AccuracyBoost();
 
 	// iterate all possible seeds.
 	for ( int i{ }; i <= SEED_MAX; ++i ) {
@@ -634,20 +708,65 @@ bool Aimbot::CheckHitchance( Player *player, const ang_t &angle ) {
 		// get end of trace.
 		end = start + ( dir * g_cl.m_weapon_info->m_range );
 
+		float goal_damage = 1.f;
+		int hp = std::min(100, player->m_iHealth());
+
+		if (g_cl.m_weapon_id == ZEUS)
+		{
+			goal_damage = hp + 1;
+		}
+		else
+		{
+			goal_damage = g_input.GetKeyState(g_menu.main.aimbot.damage_override.get()) ? g_menu.main.aimbot.damage_override_value.get() : g_menu.main.aimbot.minimal_damage.get();
+
+			if (goal_damage >= 100 || g_menu.main.aimbot.minimal_damage.get())
+				goal_damage = hp + (goal_damage - 100);
+		}
+
 		// setup ray and trace.
 		g_csgo.m_engine_trace->ClipRayToEntity( Ray( start, end ), MASK_SHOT, player, &tr );
 
-		// check if we hit a valid player / hitgroup on the player and increment total hits.
-		if ( tr.m_entity == player && game::IsValidHitgroup( tr.m_hitgroup ) )
-			++total_hits;
+		{
+			penetration::PenetrationInput_t in;
+			in.m_damage = 1.f;
+			in.m_damage_pen = 1.f;
+			in.m_can_pen = g_cl.m_weapon_id == ZEUS ? false : true;
+			in.m_target = player;
+			in.m_from = g_cl.m_local;
+			in.m_pos = end;
+
+			penetration::PenetrationOutput_t out;
+
+			bool hit = penetration::run(&in, &out);
+
+			// check if we hit a valid player / hitgroup on the player and increment total hits.
+			if (tr.m_entity == player && game::IsValidHitgroup(tr.m_hitgroup)) {
+				if (g_menu.main.aimbot.accuracy.get() != 0) {
+					if (hit && (out.m_damage >= goal_damage * accuracy)) {
+						++total_hits;
+					}
+				}
+				else if (hit) {
+					++total_hits;
+				}
+			}
+		}
 
 		// we made it.
-		if ( total_hits >= needed_hits )
+		if ( total_hits >= needed_hits)
 			return true;
 
 		// we cant make it anymore.
-		if ( ( SEED_MAX - i + total_hits ) < needed_hits )
+		if ((SEED_MAX - i + total_hits) < needed_hits) {
+			g_movement.QuickStop();
 			return false;
+		}
+
+		if (g_menu.main.aimbot.delay_shot.get(1) && g_cl.m_local->m_flDuckAmount() >= 0.125f) {
+			if (m_flPreviousDuckAmount > g_cl.m_local->m_flDuckAmount()) {
+				return false;
+			}
+		}
 	}
 
 	return false;
@@ -677,8 +796,8 @@ bool AimPlayer::SetupHitboxPoints( LagRecord *record, BoneArray *bones, int inde
 	float scale = g_menu.main.aimbot.scale.get( ) / 100.f;
 
 	// big inair fix.
-	if ( !( record->m_pred_flags ) & FL_ONGROUND )
-		scale = 0.7f;
+	if (!(record->m_pred_flags & FL_ONGROUND))
+		scale = 0.5f;
 
 	float bscale = g_menu.main.aimbot.body_scale.get( ) / 100.f;
 

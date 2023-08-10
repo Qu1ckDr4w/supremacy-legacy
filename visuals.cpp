@@ -5,6 +5,8 @@ Visuals g_visuals{ };;
 void Visuals::ModulateWorld( ) {
 	std::vector< IMaterial* > world, props;
 
+	static auto sv_skyname = g_csgo.m_cvar->FindVar(HASH("sv_skyname"));
+
 	// iterate material handles.
 	for( uint16_t h{ g_csgo.m_material_system->FirstMaterial( ) }; h != g_csgo.m_material_system->InvalidMaterial( ); h = g_csgo.m_material_system->NextMaterial( h ) ) {
 		// get material from handle.
@@ -22,17 +24,16 @@ void Visuals::ModulateWorld( ) {
 	}
 
 	// night.
-	if( g_menu.main.visuals.world.get( ) == 1 ) {
-		for( const auto& w : world )
-			w->ColorModulate( 0.17f, 0.16f, 0.18f );
+	const float darkness = g_menu.main.visuals.night_amount.get() / 100.f;
 
-		// IsUsingStaticPropDebugModes my nigga
-		if( g_csgo.r_DrawSpecificStaticProp->GetInt( ) != 0 ) {
-			g_csgo.r_DrawSpecificStaticProp->SetValue( 0 );
+	if (g_menu.main.visuals.world.get() == 1) {
+		for (const auto& w : world)
+			w->ColorModulate(darkness, darkness, darkness);
+
+		// IsUsingStaticPropDebugModes
+		if (g_csgo.r_DrawSpecificStaticProp->GetInt() != 0) {
+			g_csgo.r_DrawSpecificStaticProp->SetValue(0);
 		}
-
-		for( const auto& p : props )
-			p->ColorModulate( 0.5f, 0.5f, 0.5f );
 	}
 
 	// disable night.
@@ -50,15 +51,16 @@ void Visuals::ModulateWorld( ) {
 	}
 
 	// transparent props.
-	if( g_menu.main.visuals.transparent_props.get( ) ) {
+	if (g_menu.main.visuals.transparent_props.get()) {
 
 		// IsUsingStaticPropDebugModes my nigga
-		if( g_csgo.r_DrawSpecificStaticProp->GetInt( ) != 0 ) {
-			g_csgo.r_DrawSpecificStaticProp->SetValue( 0 );
+		if (g_csgo.r_DrawSpecificStaticProp->GetInt() != 0) {
+			g_csgo.r_DrawSpecificStaticProp->SetValue(0);
 		}
 
-		for( const auto& p : props )
-			p->AlphaModulate( 0.85f );
+		float alpha = g_menu.main.visuals.transparent_props_amount.get() / 100;
+		for (const auto& p : props)
+			p->AlphaModulate(alpha);
 	}
 
 	// disable transparent props.
@@ -72,84 +74,152 @@ void Visuals::ModulateWorld( ) {
 		for( const auto& p : props )
 			p->AlphaModulate( 1.0f );
 	}
-}
 
-void Visuals::ThirdpersonThink( ) {
-	ang_t                          offset;
-	vec3_t                         origin, forward;
-	static CTraceFilterSimple_game filter{ };
-	CGameTrace                     tr;
-
-	// for whatever reason overrideview also gets called from the main menu.
-	if( !g_csgo.m_engine->IsInGame( ) )
-		return;
-
-	// check if we have a local player and he is alive.
-	bool alive = g_cl.m_local && g_cl.m_local->alive( );
-
-	// camera should be in thirdperson.
-	if( m_thirdperson ) {
-
-		// if alive and not in thirdperson already switch to thirdperson.
-		if( alive && !g_csgo.m_input->CAM_IsThirdPerson( ) )
-			g_csgo.m_input->CAM_ToThirdPerson( );
-
-		// if dead and spectating in firstperson switch to thirdperson.
-		else if( g_cl.m_local->m_iObserverMode( ) == 4 ) {
-
-			// if in thirdperson, switch to firstperson.
-			// we need to disable thirdperson to spectate properly.
-			if( g_csgo.m_input->CAM_IsThirdPerson( ) ) {
-				g_csgo.m_input->CAM_ToFirstPerson( );
-				g_csgo.m_input->m_camera_offset.z = 0.f;
-			}
-
-			g_cl.m_local->m_iObserverMode( ) = 5;
-		}
+	switch (g_menu.main.visuals.skybox.get()) {
+	case 0: //Tibet
+		sv_skyname->SetValue(XOR("cs_tibet"));
+		break;
+	case 1: //Embassy
+		sv_skyname->SetValue(XOR("embassy"));
+		break;
+	case 2: //Italy
+		sv_skyname->SetValue(XOR("italy"));
+		break;
+	case 3: //Daylight 1
+		sv_skyname->SetValue(XOR("sky_cs15_daylight01_hdr"));
+		break;
+	case 4: //Cloudy
+		sv_skyname->SetValue(XOR("sky_csgo_cloudy01"));
+		break;
+	case 5: //Night 1
+		sv_skyname->SetValue(XOR("sky_csgo_night02"));
+		break;
+	case 6: //Night 2
+		sv_skyname->SetValue(XOR("sky_csgo_night02b"));
+		break;
+	case 7: //Night Flat
+		sv_skyname->SetValue(XOR("sky_csgo_night_flat"));
+		break;
+	case 8: //Day HD
+		sv_skyname->SetValue(XOR("sky_day02_05_hdr"));
+		break;
+	case 9: //Day
+		sv_skyname->SetValue(XOR("sky_day02_05"));
+		break;
+	case 10: //Rural
+		sv_skyname->SetValue(XOR("sky_l4d_rural02_ldr"));
+		break;
+	case 11: //Vertigo HD
+		sv_skyname->SetValue(XOR("vertigo_hdr"));
+		break;
+	case 12: //Vertigo Blue HD
+		sv_skyname->SetValue(XOR("vertigoblue_hdr"));
+		break;
+	case 13: //Vertigo
+		sv_skyname->SetValue(XOR("vertigo"));
+		break;
+	case 14: //Vietnam
+		sv_skyname->SetValue(XOR("vietnam"));
+		break;
+	case 15: //Dusty Sky
+		sv_skyname->SetValue(XOR("sky_dust"));
+		break;
+	case 16: //Jungle
+		sv_skyname->SetValue(XOR("jungle"));
+		break;
+	case 17: //Nuke
+		sv_skyname->SetValue(XOR("nukeblank"));
+		break;
+	case 18: //Office
+		sv_skyname->SetValue(XOR("office"));
+		break;
+	default:
+		break;
 	}
 
-	// camera should be in firstperson.
-	else if( g_csgo.m_input->CAM_IsThirdPerson( ) ) {
-		g_csgo.m_input->CAM_ToFirstPerson( );
+	float destiny = g_menu.main.visuals.fog_density.get() / 100.f;
+	static const auto fog_enable = g_csgo.m_cvar->FindVar(HASH("fog_enable"));
+	static const auto fog_override = g_csgo.m_cvar->FindVar(HASH("fog_override"));
+	static const auto fog_color = g_csgo.m_cvar->FindVar(HASH("fog_color"));
+	static const auto fog_start = g_csgo.m_cvar->FindVar(HASH("fog_start"));
+	static const auto fog_end = g_csgo.m_cvar->FindVar(HASH("fog_end"));
+	static const auto fog_destiny = g_csgo.m_cvar->FindVar(HASH("fog_maxdensity"));
+
+	if (g_menu.main.visuals.fog.get()) {
+		fog_enable->SetValue(1);
+		fog_override->SetValue(g_menu.main.visuals.fog.get());
+		fog_color->SetValue(std::string(std::to_string(g_menu.main.visuals.fog_color.get().r()) + " " + std::to_string(g_menu.main.visuals.fog_color.get().g()) + " " + std::to_string(g_menu.main.visuals.fog_color.get().b())).c_str());
+		fog_start->SetValue(g_menu.main.visuals.fog_start.get());
+		fog_end->SetValue(g_menu.main.visuals.fog_end.get());
+		fog_destiny->SetValue(destiny);
+	}
+	else
+		fog_enable->SetValue(0);
+}
+
+void Visuals::ThirdpersonThink() {
+	if (!g_csgo.m_engine->IsInGame() || !g_cl.m_local)
+		return;
+
+	bool alive = g_cl.m_local->alive();
+	bool inThirdperson = g_csgo.m_input->CAM_IsThirdPerson();
+
+	if (m_thirdperson) {
+		if (alive && !inThirdperson)
+			g_csgo.m_input->CAM_ToThirdPerson();
+		else if (g_cl.m_local->m_iObserverMode() == 4) {
+			if (inThirdperson) {
+				g_csgo.m_input->CAM_ToFirstPerson();
+				g_csgo.m_input->m_camera_offset.z = 0.f;
+			}
+			g_cl.m_local->m_iObserverMode() = 5;
+		}
+	}
+	else if (inThirdperson) {
+		g_csgo.m_input->CAM_ToFirstPerson();
 		g_csgo.m_input->m_camera_offset.z = 0.f;
 	}
 
-	// if after all of this we are still in thirdperson.
-	if( g_csgo.m_input->CAM_IsThirdPerson( ) ) {
-		// get camera angles.
-		g_csgo.m_engine->GetViewAngles( offset );
+	if (!g_csgo.m_input->CAM_IsThirdPerson())
+		return;
 
-		// get our viewangle's forward directional vector.
-		math::AngleVectors( offset, &forward );
+	ang_t offset;
+	vec3_t origin, forward;
+	CGameTrace tr;
+	static CTraceFilterSimple_game filter{ };
 
-		// cam_idealdist convar.
-		offset.z = 150.f;
+	g_csgo.m_engine->GetViewAngles(offset);
+	math::AngleVectors(offset, &forward);
+	offset.z = g_menu.main.visuals.thirdperson_amount.get();
 
-		// start pos.
-		origin = g_cl.m_shoot_pos;
+	origin = g_cl.m_shoot_pos;
+	filter.SetPassEntity(g_cl.m_local);
 
-		// setup trace filter and trace.
-		filter.SetPassEntity( g_cl.m_local );
+	g_csgo.m_engine_trace->TraceRay(
+		Ray(origin, origin - (forward * offset.z), { -16.f, -16.f, -16.f }, { 16.f, 16.f, 16.f }),
+		MASK_NPCWORLDSTATIC,
+		(ITraceFilter*)&filter,
+		&tr
+	);
 
-		g_csgo.m_engine_trace->TraceRay(
-			Ray( origin, origin - ( forward * offset.z ), { -16.f, -16.f, -16.f }, { 16.f, 16.f, 16.f } ),
-			MASK_NPCWORLDSTATIC,
-			( ITraceFilter* ) &filter,
-			&tr
-		);
+	math::clamp(tr.m_fraction, 0.f, 1.f);
+	offset.z *= tr.m_fraction;
 
-		// adapt distance to travel time.
-		math::clamp( tr.m_fraction, 0.f, 1.f );
-		offset.z *= tr.m_fraction;
-
-		// override camera angles.
-		g_csgo.m_input->m_camera_offset = { offset.x, offset.y, offset.z };
-	}
+	g_csgo.m_input->m_camera_offset = { offset.x, offset.y, offset.z };
 }
 
 void Visuals::Force_Xhair() {
 	if (g_csgo.m_engine->IsInGame()) {
 		g_csgo.weapon_debug_spread_show->SetValue(3);
+	}
+}
+
+void Visuals::Aspect_Ratio() {
+
+	if (g_menu.main.misc.aspect_ratio.get()) {
+
+		static auto aspect_ratio = g_csgo.m_cvar->FindVar(HASH("r_aspectratio"));
+		aspect_ratio->SetValue(g_menu.main.misc.aspect_ratio_amount.get());
 	}
 }
 
@@ -257,17 +327,18 @@ void Visuals::think( ) {
 	}
 
 	// draw everything else.
-	SpreadCrosshair( );
 	StatusIndicators( );
 	Spectators( );
 	PenetrationCrosshair( );
 	Force_Xhair( );
+	Aspect_Ratio( );
 	Hitmarker( );
 	DrawPlantedC4( );
+	g_movement.AutoPeek();
 }
 
 void Visuals::Spectators( ) {
-	if( !g_menu.main.visuals.spectators.get( ) )
+	if( !g_menu.main.visuals.indicators.get(3) )
 		return;
 
 	std::vector< std::string > spectators{ XOR( "spectators" ) };
@@ -360,50 +431,12 @@ void Visuals::StatusIndicators( ) {
 	}
 }
 
-void Visuals::SpreadCrosshair( ) {
-	// dont do if dead.
-	if( !g_cl.m_processing )
-		return;
-
-	if( !g_menu.main.visuals.spread_xhair.get( ) )
-		return;
-
-	// get active weapon.
-	Weapon* weapon = g_cl.m_local->GetActiveWeapon( );
-	if( !weapon )
-		return;
-
-	WeaponInfo* data = weapon->GetWpnData( );
-	if( !data )
-		return;
-
-	// do not do this on: bomb, knife and nades.
-	CSWeaponType type = data->m_weapon_type;
-	if( type == WEAPONTYPE_KNIFE || type == WEAPONTYPE_C4 || type == WEAPONTYPE_GRENADE )
-		return;
-
-	// calc radius.
-	float radius = ( ( weapon->GetInaccuracy( ) + weapon->GetSpread( ) ) * 320.f ) / ( std::tan( math::deg_to_rad( g_cl.m_local->GetFOV( ) ) * 0.5f ) + FLT_EPSILON );
-
-	// scale by screen size.
-	radius *= g_cl.m_height * ( 1.f / 480.f );
-
-	// get color.
-	Color col = g_menu.main.visuals.spread_xhair_col.get( );
-
-	// modify alpha channel.
-	col.a( ) = 200 * ( g_menu.main.visuals.spread_xhair_blend.get( ) / 100.f );
-
-	int segements = std::max( 16, ( int ) std::round( radius * 0.75f ) );
-	render::circle( g_cl.m_width / 2, g_cl.m_height / 2, radius, segements, col );
-}
-
 void Visuals::PenetrationCrosshair( ) {
 	int   x, y;
 	bool  valid_player_hit;
 	Color final_color;
 
-	if( !g_menu.main.visuals.pen_crosshair.get( ) || !g_cl.m_processing )
+	if( !g_menu.main.visuals.indicators.get(4) || !g_cl.m_processing )
 		return;
 
 	x = g_cl.m_width / 2;
@@ -442,7 +475,7 @@ void Visuals::draw( Entity* ent ) {
 		DrawPlayer( player );
 	}
 
-	else if( g_menu.main.visuals.items.get( ) && ent->IsBaseCombatWeapon( ) && !ent->dormant( ) )
+	else if( g_menu.main.visuals.weapons.get( ) && ent->IsBaseCombatWeapon( ) && !ent->dormant( ) )
 		DrawItem( ent->as< Weapon* >( ) );
 
 	else if( g_menu.main.visuals.proj.get( ) )
@@ -516,8 +549,10 @@ void Visuals::DrawItem( Weapon* item ) {
 	if( !data )
 		return;
 
-	Color col = g_menu.main.visuals.item_color.get( );
+	Color col = g_menu.main.visuals.weapons_color.get( );
+	Color col2 = g_menu.main.visuals.ammo_color.get();
 	col.a( ) = 0xb4;
+	col2.a() = 0xb4;
 
 	// render bomb in green.
 	if( item->is( HASH( "CC4" ) ) )
@@ -531,21 +566,21 @@ void Visuals::DrawItem( Weapon* item ) {
 		// smallfonts needs uppercase.
 		std::transform( name.begin( ), name.end( ), name.begin( ), ::toupper );
 
-		render::esp_small.string( screen.x, screen.y, col, name, render::ALIGN_CENTER );
+		render::esp_small.string( screen.x, screen.y - render::esp_small.m_size.m_height - 1, col, name, render::ALIGN_CENTER );
 	}
 
-	if( !g_menu.main.visuals.ammo.get( ) )
+	if (!g_menu.main.visuals.ammo.get())
 		return;
 
 	// nades do not have ammo.
-	if( data->m_weapon_type == WEAPONTYPE_GRENADE || data->m_weapon_type == WEAPONTYPE_KNIFE )
+	if (data->m_weapon_type == WEAPONTYPE_GRENADE || data->m_weapon_type == WEAPONTYPE_KNIFE)
 		return;
 
-	if( item->m_iItemDefinitionIndex( ) == 0 || item->m_iItemDefinitionIndex( ) == C4 )
+	if (item->m_iItemDefinitionIndex() == 0 || item->m_iItemDefinitionIndex() == C4)
 		return;
 
-	std::string ammo = tfm::format( XOR( "(%i/%i)" ), item->m_iClip1( ), item->m_iPrimaryReserveAmmoCount( ) );
-	render::esp_small.string( screen.x, screen.y - render::esp_small.m_size.m_height - 1, col, ammo, render::ALIGN_CENTER );
+	std::string ammo = tfm::format(XOR("(%i/%i)"), item->m_iClip1(), item->m_iPrimaryReserveAmmoCount());
+	render::esp_small.string(screen.x, screen.y, col2, ammo, render::ALIGN_CENTER);
 }
 
 void Visuals::OffScreen( Player* player, int alpha ) {
@@ -591,7 +626,7 @@ void Visuals::OffScreen( Player* player, int alpha ) {
 		out_offscreen_pos.y = ( int ) ( ( g_cl.m_height / 2.f ) - ( radius * ca ) );
 	};
 
-	if( !g_menu.main.players.offscreen.get( ) )
+	if( !g_menu.main.visuals.indicators.get(5) )
 		return;
 
 	if( !g_cl.m_processing || !g_cl.m_local->enemy( player ) )
@@ -602,8 +637,9 @@ void Visuals::OffScreen( Player* player, int alpha ) {
 	is_on_screen = render::WorldToScreen( target_pos, screen_pos );
 
 	// give some extra room for screen position to be off screen.
-	leeway_x = g_cl.m_width / 18.f;
-	leeway_y = g_cl.m_height / 18.f;
+	float size = g_menu.main.visuals.offscreen_size.get();
+	leeway_x = g_cl.m_width / size;
+	leeway_y = g_cl.m_height / size;
 
 	// origin is not on the screen at all, get offscreen position data and start rendering.
 	if( !is_on_screen
@@ -678,7 +714,7 @@ void Visuals::OffScreen( Player* player, int alpha ) {
 		//     damage_data.m_color = colors::white;
 
 		// render!
-		color = g_menu.main.players.offscreen_color.get( ); // damage_data.m_color;
+		color = g_menu.main.visuals.offscreen_color.get( ); // damage_data.m_color;
 		color.a( ) = ( alpha == 255 ) ? alpha : alpha / 2;
 
 		g_csgo.m_surface->DrawSetColor( color );
@@ -1349,120 +1385,6 @@ void Visuals::DrawHitboxMatrix( LagRecord* record, Color col, float time ) {
 			math::VectorTransform( bbox->m_maxs, matrix, maxs );
 
 			g_csgo.m_debug_overlay->AddCapsuleOverlay( mins, maxs, bbox->m_radius, col.r( ), col.g( ), col.b( ), col.a( ), time, 0, 0 );
-		}
-	}
-}
-
-void Visuals::DrawBeams( ) {
-	size_t     impact_count;
-	float      curtime, dist;
-	bool       is_final_impact;
-	vec3_t     va_fwd, start, dir, end;
-	BeamInfo_t beam_info;
-	Beam_t* beam;
-
-	if( !g_cl.m_local )
-		return;
-
-	if( !g_menu.main.visuals.impact_beams.get( ) )
-		return;
-
-	auto vis_impacts = &g_shots.m_vis_impacts;
-
-	// the local player is dead, clear impacts.
-	if( !g_cl.m_processing ) {
-		if( !vis_impacts->empty( ) )
-			vis_impacts->clear( );
-	}
-
-	else {
-		impact_count = vis_impacts->size( );
-		if( !impact_count )
-			return;
-
-		curtime = game::TICKS_TO_TIME( g_cl.m_local->m_nTickBase( ) );
-
-		for( size_t i{ impact_count }; i-- > 0; ) {
-			auto impact = &vis_impacts->operator[ ]( i );
-			if( !impact )
-				continue;
-
-			// impact is too old, erase it.
-			if( std::abs( curtime - game::TICKS_TO_TIME( impact->m_tickbase ) ) > g_menu.main.visuals.impact_beams_time.get( ) ) {
-				vis_impacts->erase( vis_impacts->begin( ) + i );
-
-				continue;
-			}
-
-			// already rendering this impact, skip over it.
-			if( impact->m_ignore )
-				continue;
-
-			// is this the final impact?
-			// last impact in the vector, it's the final impact.
-			if( i == ( impact_count - 1 ) )
-				is_final_impact = true;
-
-			// the current impact's tickbase is different than the next, it's the final impact.
-			else if( ( i + 1 ) < impact_count && impact->m_tickbase != vis_impacts->operator[ ]( i + 1 ).m_tickbase )
-				is_final_impact = true;
-
-			else
-				is_final_impact = false;
-
-			// is this the final impact?
-			// is_final_impact = ( ( i == ( impact_count - 1 ) ) || ( impact->m_tickbase != vis_impacts->at( i + 1 ).m_tickbase ) );
-
-			if( is_final_impact ) {
-				// calculate start and end position for beam.
-				start = impact->m_shoot_pos;
-
-				dir = ( impact->m_impact_pos - start ).normalized( );
-				dist = ( impact->m_impact_pos - start ).length( );
-
-				end = start + ( dir * dist );
-
-				// setup beam info.
-				// note - dex; possible beam models: sprites/physbeam.vmt | sprites/white.vmt
-				beam_info.m_vecStart = start;
-				beam_info.m_vecEnd = end;
-				beam_info.m_nModelIndex = g_csgo.m_model_info->GetModelIndex( XOR( "sprites/purplelaser1.vmt" ) );
-				beam_info.m_pszModelName = XOR( "sprites/purplelaser1.vmt" );
-				beam_info.m_flHaloScale = 0.f;
-				beam_info.m_flLife = g_menu.main.visuals.impact_beams_time.get( );
-				beam_info.m_flWidth = 2.f;
-				beam_info.m_flEndWidth = 2.f;
-				beam_info.m_flFadeLength = 0.f;
-				beam_info.m_flAmplitude = 0.f;   // beam 'jitter'.
-				beam_info.m_flBrightness = 255.f;
-				beam_info.m_flSpeed = 0.5f;  // seems to control how fast the 'scrolling' of beam is... once fully spawned.
-				beam_info.m_nStartFrame = 0;
-				beam_info.m_flFrameRate = 0.f;
-				beam_info.m_nSegments = 2;     // controls how much of the beam is 'split up', usually makes m_flAmplitude and m_flSpeed much more noticeable.
-				beam_info.m_bRenderable = true;  // must be true or you won't see the beam.
-				beam_info.m_nFlags = 0;
-
-				if( !impact->m_hit_player ) {
-					beam_info.m_flRed = g_menu.main.visuals.impact_beams_color.get( ).r( );
-					beam_info.m_flGreen = g_menu.main.visuals.impact_beams_color.get( ).g( );
-					beam_info.m_flBlue = g_menu.main.visuals.impact_beams_color.get( ).b( );
-				}
-
-				else {
-					beam_info.m_flRed = g_menu.main.visuals.impact_beams_hurt_color.get( ).r( );
-					beam_info.m_flGreen = g_menu.main.visuals.impact_beams_hurt_color.get( ).g( );
-					beam_info.m_flBlue = g_menu.main.visuals.impact_beams_hurt_color.get( ).b( );
-				}
-
-				// attempt to render the beam.
-				beam = game::CreateGenericBeam( beam_info );
-				if( beam ) {
-					g_csgo.m_beams->DrawBeam( beam );
-
-					// we only want to render a beam for this impact once.
-					impact->m_ignore = true;
-				}
-			}
 		}
 	}
 }

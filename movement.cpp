@@ -367,26 +367,77 @@ void Movement::FixMove( CUserCmd *cmd, const ang_t &wish_angles ) {
 	}
 }
 
-void Movement::AutoPeek( ) {
+bool position_reset = false;
+vec3_t position = { 0, 0, 0 };
+
+__forceinline vec3_t vector_angles(const vec3_t& start, const vec3_t& end) {
+	vec3_t delta = end - start;
+
+	float magnitude = sqrtf(delta.x * delta.x + delta.y * delta.y);
+	float pitch = atan2f(-delta.z, magnitude) * M_RADPI;
+	float yaw = atan2f(delta.y, delta.x) * M_RADPI;
+
+	vec3_t angle(pitch, yaw, 0.0f);
+	return angle.clamp();
+}
+
+__forceinline vec3_t angle_vectors(const vec3_t& angles) {
+	float sp, sy, cp, cy;
+	sp = sinf(angles.x * M_PIRAD);
+	cp = cosf(angles.x * M_PIRAD);
+	sy = sinf(angles.y * M_PIRAD);
+	cy = cosf(angles.y * M_PIRAD);
+
+	return vec3_t{ cp * cy, cp * sy, -sp };
+}
+
+void Movement::AutoPeek() {
 	// set to invert if we press the button.
-	if( g_input.GetKeyState( g_menu.main.misc.autopeek.get( ) ) ) {
-		if( g_cl.m_old_shot )
+	if (g_input.GetKeyState(g_menu.main.misc.autopeek.get())) {
+		if (!position_reset)
+		{
+			position_reset = true;
+			position = g_cl.m_local->GetAbsOrigin();
+		}
+
+		if (g_cl.m_old_shot)
 			m_invert = true;
 
-		vec3_t move{ g_cl.m_cmd->m_forward_move, g_cl.m_cmd->m_side_move, 0.f };
+		if (!g_cl.m_pressing_move)
+			m_invert = true;
 
-		if( m_invert ) {
-			move *= -1.f;
-			g_cl.m_cmd->m_forward_move = move.x;
-			g_cl.m_cmd->m_side_move = move.y;
+		if (g_cl.m_pressing_move)
+			m_invert = false;
+
+		if (m_invert)
+		{
+			vec3_t direction = vector_angles(g_cl.m_local->GetAbsOrigin(), position);
+			direction.y = g_cl.m_cmd->m_view_angles.y - direction.y;
+
+			vec3_t new_move = angle_vectors(direction);
+			new_move *= 450.f;
+
+			new_move.x = std::clamp< float >(new_move.x, -450.f, 450.f);
+			new_move.y = std::clamp< float >(new_move.y, -450.f, 450.f);
+
+			g_cl.m_cmd->m_forward_move = new_move.x;
+			g_cl.m_cmd->m_side_move = new_move.y;
+
+			float distance = (g_cl.m_local->GetAbsOrigin() - position).length_2d_sqr();
+
+			if (distance < 14 && g_cl.m_local->m_vecVelocity().length() < 10.f) {
+				Movement::QuickStop();
+				m_invert = false;
+			}
 		}
 	}
-
-	else m_invert = false;
-
-	bool can_stop = g_menu.main.aimbot.autostop_always_on.get( ) || ( !g_menu.main.aimbot.autostop_always_on.get( ) );
-	if( ( g_input.GetKeyState( g_menu.main.misc.autopeek.get( ) ) || can_stop ) && g_aimbot.m_stop ) {
-		Movement::QuickStop( );
+	else {
+		position_reset = false;
+		m_invert = false;
+	}
+	auto color = g_menu.main.misc.autopeek_color.get();
+	if (g_input.GetKeyState(g_menu.main.misc.autopeek.get())) {
+		render::sphere2(position, 13.f, 15.f, 1.f, color);
 	}
 }
 

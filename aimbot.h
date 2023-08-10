@@ -138,6 +138,8 @@ public:
 
 	bool m_stop;
 
+	float m_flPreviousDuckAmount = 0.0f;
+
 public:
 	__forceinline void reset( ) {
 		// reset aimbot data.

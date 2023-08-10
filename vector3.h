@@ -1,4 +1,6 @@
 #pragma once
+static constexpr long double M_RADPI = 57.295779513082f;
+static constexpr long double M_PIRAD = 0.01745329251f;
 
 class quaternion_t {
 public:
@@ -185,6 +187,20 @@ public:
 	// methods.
 	__forceinline void clear( ) {
 		x = y = z = 0.f;
+	}
+
+	vec3_t clamp() {
+		for (size_t axis{ }; axis < 2; axis++) {
+			auto& cur_axis = operator[](axis);
+			if (!std::isfinite(cur_axis)) {
+				cur_axis = 0.f;
+			}
+		}
+
+		x = std::clamp(x, -89.f, 89.f);
+		y = std::clamp(std::remainder(y, 360.f), -180.f, 180.f);
+		z = 0.f;
+		return *this;
 	}
 
 	__forceinline float length_sqr( ) const {

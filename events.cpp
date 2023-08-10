@@ -56,11 +56,15 @@ void events::auto_buy() {
 	auto primary = g_menu.main.misc.primary.get();
 	auto secondary = g_menu.main.misc.secondary.get();
 
+	if (!g_cl.m_local)
+		return;
+
 	if (g_menu.main.misc.auto_buy.get()) {
 
 		// primary
 		if (primary == 1 && !autos) {
-			g_csgo.m_engine->ExecuteClientCmd((XOR("buy scar20; buy g3sg1")));
+			g_csgo.m_engine->ExecuteClientCmd((XOR("buy scar20")));
+			g_csgo.m_engine->ExecuteClientCmd((XOR("buy g3sg1")));
 		}
 
 		// I know it's not really needed but hey let's keep it consistant?
@@ -75,7 +79,7 @@ void events::auto_buy() {
 
 		// secondary
 		if (secondary == 1 && !light_pistol) {
-			g_csgo.m_engine->ExecuteClientCmd((XOR("buy tec9; buy fn57")));
+			g_csgo.m_engine->ExecuteClientCmd((XOR("buy tec9; buy fn57;")));
 		}
 
 		// I know it's not really needed but hey let's keep it consistant?
@@ -90,12 +94,12 @@ void events::auto_buy() {
 
 		// consistant? No fuck that here.
 		if (g_menu.main.misc.utility.get(0)) {
-			g_csgo.m_engine->ExecuteClientCmd(XOR("buy heavyarmor; buy vesthelm; buy vest"));
+			g_csgo.m_engine->ExecuteClientCmd(XOR("buy heavyarmor; buy vesthelm; buy vest;"));
 		}
 
 		// consistant? No fuck that here.
 		if (g_menu.main.misc.utility.get(1)) {
-			g_csgo.m_engine->ExecuteClientCmd(XOR("buy hegrenade; buy molotov; buy incgrenade; buy smokegrenade"));
+			g_csgo.m_engine->ExecuteClientCmd(XOR("buy hegrenade; buy molotov; buy incgrenade; buy smokegrenade;"));
 		}
 
 		// consistant? No fuck that here.

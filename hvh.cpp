@@ -23,16 +23,6 @@ void HVH::AntiAimPitch( ) {
 		g_cl.m_cmd->m_view_angles.x = -89.f;
 		break;
 
-	case 3:
-		// random.
-		g_cl.m_cmd->m_view_angles.x = g_csgo.RandomFloat( -89.f, 89.f );
-		break;
-
-	case 4:
-		// ideal.
-		IdealPitch( );
-		break;
-
 	default:
 		break;
 	}
@@ -494,11 +484,18 @@ void HVH::DoRealAntiAim( ) {
 				// jitter.
 			case 2: {
 
-				// get the range from the menu.
-				float range = m_jitter_range / 2.f;
+			float range = m_jitter_range;
+			static bool increaseAngle = true;
 
-				// set angle.
-				g_cl.m_cmd->m_view_angles.y += g_csgo.RandomFloat( -range, range );
+			if (increaseAngle) {
+				g_cl.m_cmd->m_view_angles.y += range;
+			}
+			else {
+					g_cl.m_cmd->m_view_angles.y -= range;
+				}
+
+				increaseAngle = !increaseAngle;
+
 				break;
 			}
 
@@ -513,21 +510,19 @@ void HVH::DoRealAntiAim( ) {
 				break;
 			}
 
-				  // random.
-			case 4:
-				// check update time.
-				if( g_csgo.m_globals->m_curtime >= m_next_random_update ) {
+				  // sway.
+			case 4: {
+				float range = 90.f;
+				float speed = 20.f;
 
-					// set new random angle.
-					m_random_angle = g_csgo.RandomFloat( -180.f, 180.f );
+				// Calculate the angle based on a sine wave for swaying.
+				float angleOffset = range * 0.5f * sinf(g_csgo.m_globals->m_curtime * speed);
 
-					// set next update time
-					m_next_random_update = g_csgo.m_globals->m_curtime + m_rand_update;
-				}
+				// Set the view angle.
+				g_cl.m_cmd->m_view_angles.y = m_direction + angleOffset;
 
-				// apply angle.
-				g_cl.m_cmd->m_view_angles.y = m_random_angle;
 				break;
+			}
 
 			default:
 				break;
@@ -569,14 +564,27 @@ void HVH::DoFakeAntiAim( ) {
 
 		// relative jitter.
 	case 3: {
-		// get fake jitter range from menu.
-		float range = g_menu.main.antiaim.fake_jitter_range.get( ) / 2.f;
-
 		// set base to opposite of direction.
-		g_cl.m_cmd->m_view_angles.y = m_direction + 180.f;
+		if (g_menu.main.antiaim.fake_target.get() == 0) {
+			g_cl.m_cmd->m_view_angles.y = m_direction + 180.f;
+		}
 
-		// apply jitter.
-		g_cl.m_cmd->m_view_angles.y += g_csgo.RandomFloat( -range, range );
+		if (g_menu.main.antiaim.fake_target.get() == 1) {
+			g_cl.m_cmd->m_view_angles.y = m_direction;
+		}
+
+		float range = g_menu.main.antiaim.fake_jitter_range.get();
+		static bool increaseAngle = true;
+
+		if (increaseAngle) {
+			g_cl.m_cmd->m_view_angles.y -= range;
+		}
+		else {
+			g_cl.m_cmd->m_view_angles.y += range;
+		}
+
+		increaseAngle = !increaseAngle;
+
 		break;
 	}
 
@@ -586,8 +594,22 @@ void HVH::DoFakeAntiAim( ) {
 		break;
 
 		// random.
-	case 5:
-		g_cl.m_cmd->m_view_angles.y = g_csgo.RandomFloat( -180.f, 180.f );
+	case 5: {
+		float range = 180.f;
+		float speed = 50.f;
+
+		// Calculate the angle based on a sine wave for swaying.
+		float angleOffset = range * 0.5f * sinf(g_csgo.m_globals->m_curtime * speed);
+
+		// Set the view angle.
+		if (g_menu.main.antiaim.fake_target.get() == 0) {
+			g_cl.m_cmd->m_view_angles.y = m_direction + 180.f + angleOffset;
+		}
+
+		if (g_menu.main.antiaim.fake_target.get() == 1) {
+			g_cl.m_cmd->m_view_angles.y = m_direction + angleOffset;
+		}
+	}
 		break;
 
 		// local view.
@@ -638,7 +660,7 @@ void HVH::AntiAim( ) {
 	if( ( g_cl.m_buttons & IN_JUMP ) || !( g_cl.m_flags & FL_ONGROUND ) )
 		m_mode = AntiAimMode::AIR;
 
-	else if( g_cl.m_speed > 0.1f )
+	else if( g_cl.m_speed > g_menu.main.antiaim.walk_speed.get() )
 		m_mode = AntiAimMode::WALK;
 
 	// load settings.

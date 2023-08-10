@@ -92,12 +92,12 @@ public:
 	static void ModulateWorld( );
 	void ThirdpersonThink( );
     void Force_Xhair();
+    void Aspect_Ratio();
 	void Hitmarker( );
 	void NoSmoke( );
 	void think( );
 	void Spectators( );
 	void StatusIndicators( );
-	void SpreadCrosshair( );
     void PenetrationCrosshair( );
     void DrawPlantedC4();
 	void draw( Entity* ent );
@@ -110,7 +110,6 @@ public:
 	void DrawSkeleton( Player* player, int opacity );
 	void RenderGlow( );
 	void DrawHitboxMatrix( LagRecord* record, Color col, float time );
-    void DrawBeams( );
 	void DebugAimbotPoints( Player* player );
 };
 
